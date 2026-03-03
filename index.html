@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gullknapp Ops Strip Board</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="title">GULLKNAPP OPS STRIP BOARD</div>
+      <div class="subtitle">Digital progress strips • drag & drop • local save</div>
+    </div>
+
+    <div class="clocks">
+      <div class="clock">
+        <div class="clock-label">LOCAL (Europe/Oslo)</div>
+        <div class="clock-value" id="clockLocal">--:--:--</div>
+      </div>
+      <div class="clock">
+        <div class="clock-label">UTC</div>
+        <div class="clock-value" id="clockUtc">--:--:--</div>
+      </div>
+    </div>
+  </header>
+
+  <section class="controls">
+    <button id="newStripBtn" class="btn primary" title="Shortcut: N">+ New strip</button>
+
+    <label class="toggle">
+      <input type="checkbox" id="autoSortToggle" />
+      <span>Auto-sort by time</span>
+    </label>
+
+    <button id="exportBtn" class="btn" title="Download a JSON backup">Export</button>
+    <label class="btn filebtn" title="Import a JSON backup">
+      Import
+      <input type="file" id="importFile" accept="application/json" />
+    </label>
+
+    <button id="clearDepartedBtn" class="btn danger" title="Remove all strips in DEPARTED">Clear DEPARTED</button>
+
+    <div class="hint">
+      Tips: Drag strips between columns • Click a strip to edit • Delete button inside strip • Shortcut: <b>N</b> new, <b>Esc</b> close.
+    </div>
+  </section>
+
+  <main class="board" id="board">
+    <section class="column" data-column="inbound">
+      <header class="column-header">
+        <h2>INBOUND</h2>
+        <div class="column-meta">ETA focus</div>
+      </header>
+      <div class="strip-container"></div>
+    </section>
+
+    <section class="column" data-column="ground">
+      <header class="column-header">
+        <h2>ON GROUND</h2>
+        <div class="column-meta">Stand / parking</div>
+      </header>
+      <div class="strip-container"></div>
+    </section>
+
+    <section class="column" data-column="turnaround">
+      <header class="column-header">
+        <h2>TURNAROUND</h2>
+        <div class="column-meta">Fuel / pax / bags</div>
+      </header>
+      <div class="strip-container"></div>
+    </section>
+
+    <section class="column" data-column="ready">
+      <header class="column-header">
+        <h2>READY</h2>
+        <div class="column-meta">ETD focus</div>
+      </header>
+      <div class="strip-container"></div>
+    </section>
+
+    <section class="column" data-column="departed">
+      <header class="column-header">
+        <h2>DEPARTED</h2>
+        <div class="column-meta">Archive</div>
+      </header>
+      <div class="strip-container"></div>
+    </section>
+  </main>
+
+  <!-- Modal -->
+  <div class="modal-backdrop hidden" id="modalBackdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-header">
+        <div class="modal-title" id="modalTitle">New strip</div>
+        <button class="iconbtn" id="closeModalBtn" aria-label="Close">✕</button>
+      </div>
+
+      <form id="stripForm" class="form">
+        <input type="hidden" id="stripId" />
+
+        <div class="grid">
+          <label>
+            Callsign
+            <input id="callsign" placeholder="e.g. WF123" autocomplete="off" required />
+          </label>
+
+          <label>
+            Category
+            <select id="category">
+              <option value="scheduled">Scheduled</option>
+              <option value="training">Training</option>
+              <option value="ambulance">Ambulance</option>
+              <option value="charter">Charter</option>
+              <option value="private">Private / GA</option>
+            </select>
+          </label>
+
+          <label>
+            From
+            <input id="from" placeholder="e.g. BGO" autocomplete="off" />
+          </label>
+
+          <label>
+            To
+            <input id="to" placeholder="e.g. GLL" autocomplete="off" />
+          </label>
+
+          <label>
+            Aircraft
+            <input id="aircraft" placeholder="e.g. C208 / B738" autocomplete="off" />
+          </label>
+
+          <label>
+            POB / Pax
+            <input id="pob" placeholder="e.g. 7" autocomplete="off" />
+          </label>
+
+          <label>
+            ETA (HH:MM)
+            <input id="eta" placeholder="14:20" inputmode="numeric" autocomplete="off" />
+          </label>
+
+          <label>
+            ETD (HH:MM)
+            <input id="etd" placeholder="14:50" inputmode="numeric" autocomplete="off" />
+          </label>
+        </div>
+
+        <label>
+          Notes
+          <textarea id="notes" rows="3" placeholder="Fuel / stand / special handling / delays..."></textarea>
+        </label>
+
+        <div class="form-actions">
+          <button type="button" class="btn danger" id="deleteBtn" hidden>Delete</button>
+          <div class="spacer"></div>
+          <button type="button" class="btn" id="cancelBtn">Cancel</button>
+          <button type="submit" class="btn primary" id="saveBtn">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
