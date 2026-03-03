@@ -1,0 +1,22 @@
+[
+  {
+    "registration": "LN-ABC",
+    "type": "C172",
+    "notes": "Based"
+  },
+  {
+    "registration": "LN-XYZ",
+    "type": "DA40",
+    "notes": "Based"
+  },
+  {
+    "registration": "LN-DEF",
+    "type": "PA28",
+    "notes": "Based"
+  },
+  {
+    "registration": "LN-GHI",
+    "type": "C152",
+    "notes": "Based"
+  }
+]
