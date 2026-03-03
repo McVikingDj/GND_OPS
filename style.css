@@ -1,0 +1,60 @@
+body {
+    background: #1a1a1a;
+    color: white;
+    font-family: monospace;
+    margin: 0;
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+    letter-spacing: 3px;
+}
+
+.board {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.column {
+    background: #222;
+    padding: 10px;
+    flex: 1;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+}
+
+.column h2 {
+    text-align: center;
+    border-bottom: 1px solid #444;
+    padding-bottom: 5px;
+}
+
+.strip-container {
+    min-height: 150px; /* IMPORTANT: makes drop zone active */
+    padding: 5px;
+    flex-grow: 1;
+}
+
+.strip {
+    background: #f4f1d0;
+    color: black;
+    padding: 8px;
+    margin-bottom: 8px;
+    cursor: grab;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.strip:active {
+    cursor: grabbing;
+}
+
+button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+}
