@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gullknapp Ops Strip Board</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="title">GULLKNAPP OPS STRIP BOARD</div>
+      <div class="subtitle">Traffic overview • drag & drop • local save</div>
+      <div class="version">VERSION 0.6.1
+</div>
+</div>
+
+</div>
+    </div>
+
+    <div class="summary" id="summary">
+      GND ACTIVE: 0 • DEP: 0 • ARR: 0 • PATTERN: 0 • TRAIN: 0 • X-C: 0 • SOLO: 0 • INSTRUCTOR: 0 • TOTAL: 0
+    </div>
+
+    <div class="clocks">
+      <div class="clock">
+        <div class="clock-label">LOCAL (Europe/Oslo)</div>
+        <div class="clock-value" id="clockLocal">--:--:--</div>
+      </div>
+      <div class="clock">
+        <div class="clock-label">UTC</div>
+        <div class="clock-value" id="clockUtc">--:--:--</div>
+</div>
+</div>
+
+</div>
+    </div>
+  </header>
+
+  <section class="controls">
+
+    <div class="menuWrap">
+      <button id="menuBtn" class="btn" aria-haspopup="true" aria-expanded="false" title="Tools / settings">☰ Menu</button>
+      <div id="menuPanel" class="menuPanel hidden" role="menu" aria-label="Tools menu">
+
+        <button id="exportBtn" class="menuItem" role="menuitem">Export backup</button>
+        <label class="menuItem fileItem" role="menuitem">
+          Import backup
+          <input type="file" id="importFile" accept="application/json" />
+        </label>
+        <div class="menuDivider"></div>
+        <button id="clearAllBtn" class="menuItem danger" role="menuitem">Clear all</button>
+        <button id="changelogBtn" class="menuItem" role="menuitem">Changelog</button>
+    
+      </div>
+</div>
+
+</div>
+    </div>
+    <button id="newStripBtn" class="btn primary" title="Shortcut: N">+ Add aircraft</button>
+    
+    <div class="hint">
+      Drag strips between columns • Click a strip to edit • Shortcut: <b>N</b> new, <b>Esc</b> close
+    </div>
+  </section>
+
+  <main class="board" id="board">
+    <section class="column" data-column="groundActive">
+      <header class="column-header">
+        <h2>GROUND ACTIVE</h2>
+        <div class="column-meta">Taxi / Parked / Fueling</div>
+      </header>
+      <div class="strip-container"></div>
+    </section>
+
+    <section class="column" data-column="departure">
+      <header class="column-header">
+        <h2>DEPARTURE</h2>
+        <div class="column-meta">Ready / outbound</div>
+      </header>
+      <div class="strip-container"></div>
+    </section>
+
+    <section class="column" data-column="arrival">
+      <header class="column-header">
+        <h2>ARRIVAL</h2>
+        <div class="column-meta">Inbound</div>
+      </header>
+      <div class="strip-container"></div>
+    </section>
+
+    <section class="column" data-column="pattern">
+      <header class="column-header">
+        <h2>PATTERN</h2>
+        <div class="column-meta">Circuit / TGL</div>
+      </header>
+      <div class="strip-container"></div>
+    </section>
+
+    <section class="column" data-column="training">
+      <header class="column-header">
+        <h2>TRAINING AREA</h2>
+        <div class="column-meta">Local area</div>
+      </header>
+      <div class="strip-container"></div>
+    </section>
+
+    <section class="column" data-column="crossCountry">
+      <header class="column-header">
+        <h2>CROSS COUNTRY</h2>
+        <div class="column-meta">Navigation</div>
+      </header>
+      <div class="strip-container"></div>
+    </section>
+  </main>
+
+  <!-- Modal -->
+  <div class="modal-backdrop hidden" id="modalBackdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-header">
+        <div class="modal-title" id="modalTitle">Add aircraft</div>
+        <button class="iconbtn" id="closeModalBtn" aria-label="Close">✕</button>
+      </div>
+
+      <form id="stripForm" class="form">
+        <input type="hidden" id="stripId" />
+
+        <div class="grid">
+          <label>
+            Callsign
+            <input id="callsign" placeholder="e.g. OJA123 / WF123" autocomplete="off" required />
+          </label>
+
+          <label>
+            Aircraft (based)
+            <input id="aircraftPick" list="aircraftList" placeholder="Select LN-..." autocomplete="off" />
+            <datalist id="aircraftList"></datalist>
+          </label>
+
+          <label>
+            Visiting aircraft?
+            <select id="visiting">
+              <option value="no" selected>No</option>
+              <option value="yes">Yes (manual)</option>
+            </select>
+          </label>
+
+          <label id="fuelingWrap">
+            Fueling
+            <select id="fueling">
+              <option value="no" selected>No</option>
+              <option value="yes">Yes</option>
+            </select>
+          </label>
+
+          <label>
+            Aircraft type
+            <input id="aircraft" placeholder="e.g. C172 / DA40" autocomplete="off" />
+          </label>
+
+          <label>
+            Registration
+            <input id="registration" placeholder="e.g. LN-ABC" autocomplete="off" />
+          </label>
+
+          <label>
+            Status
+            <select id="status">
+  <option value="groundActive" selected>Ground active</option>
+  <option value="departure">Departure</option>
+  <option value="arrival">Arrival</option>
+  <option value="pattern">Pattern</option>
+  <option value="training">Training area</option>
+  <option value="crossCountry">Cross country</option>
+</select>
+          </label>
+
+          <label>
+            Training
+            <select id="training">
+              <option value="none">None</option>
+              <option value="solo">Student solo</option>
+              <option value="instructor">With instructor</option>
+            </select>
+          </label>
+
+          <label id="instructorWrap">
+            Instructor (3 letters)
+            <input id="instructor" placeholder="e.g. ODJ" maxlength="3" autocomplete="off" />
+          </label>
+
+          <label>
+            Notes
+            <input id="notes" placeholder="e.g. RWY 05 • TGL x3 • Local" autocomplete="off" />
+          </label>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn danger" id="deleteBtn" hidden>Delete</button>
+          <div class="spacer"></div>
+          <button type="button" class="btn" id="cancelBtn">Cancel</button>
+          <button type="submit" class="btn primary" id="saveBtn">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  
+  <!-- Changelog Modal -->
+  <div class="modal-backdrop hidden" id="changelogBackdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="changelogTitle">
+      <div class="modal-header">
+        <div class="modal-title" id="changelogTitle">Changelog</div>
+        <button class="iconbtn" id="closeChangelogBtn" aria-label="Close">✕</button>
+      </div>
+      <div class="form" style="padding-top:10px;">
+        <div style="color: var(--muted); font-size: 12px; line-height: 1.6;">
+          <div><b>0.6.1</b> – Columns compacted so all 6 fit better on one screen</div>
+          <div><b>0.6</b> – Board redesigned to 6-column ops grid (Ground Active/Dep/Arr/Pattern/Training/X-C), timer logic updated</div>
+          <div><b>0.5</b> – Stable test build: menu, aircraft DB, AIR timer, pattern alert, WIP banner</div>
+          <div><b>0.4</b> – Terminology updates (TGL, Taxi/Parked/Fueling)</div>
+          <div><b>0.3</b> – Versioning system added</div>
+</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+  <script src="script.js"></script>
+</div>
+    </div>
+  </div>
+
+  <div class="wip-banner">
+    TEST BUILD – USE AT YOUR OWN RISK
+  </div>
+</body>
+</html>
