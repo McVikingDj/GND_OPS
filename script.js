@@ -1,8 +1,8 @@
-// v0.8.2 - robust iPad state persistence
+// v0.8.3 - glass ops UI + robust iPad state persistence
 
 (function () {
   const STORAGE_KEY = "gullknapp_strips_v06";
-  const STORAGE_META_KEY = "gullknapp_strips_meta_v082";
+  const STORAGE_META_KEY = "gullknapp_strips_meta_v083";
   const DB_URL = "./aircraft_db.json";
 
   const COLUMNS = ["departure","arrival","training","crossCountry","groundActive","pattern","encn"];
