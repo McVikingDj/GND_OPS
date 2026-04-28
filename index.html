@@ -11,7 +11,7 @@
     <div class="brand">
       <div class="title">GULLKNAPP OPS STRIP BOARD</div>
       <div class="subtitle">ATC strip board • drag & drop • local save</div>
-      <div class="version">VERSION 0.8.0</div>
+      <div class="version">VERSION 0.8.2</div>
     </div>
     <div class="summary" id="summary">GND ACTIVE: 0 • DEP: 0 • ARR: 0 • PATTERN: 0 • TRAIN: 0 • X-C: 0 • ENCN: 0 • TOTAL: 0</div>
     <div class="clocks">
@@ -54,21 +54,53 @@
   <div class="modal-backdrop hidden" id="modalBackdrop" aria-hidden="true">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
       <div class="modal-header"><div class="modal-title" id="modalTitle">Add aircraft</div><button class="iconbtn" id="closeModalBtn" aria-label="Close">✕</button></div>
-      <form id="stripForm" class="form">
+      <form id="stripForm" class="form editPanelForm">
         <input type="hidden" id="stripId" />
-        <div class="grid">
-          <label>Callsign<input id="callsign" placeholder="e.g. OJA123 / WF123" autocomplete="off" required /></label>
-          <label>Aircraft (based)<input id="aircraftPick" list="aircraftList" placeholder="Select LN-..." autocomplete="off" /><datalist id="aircraftList"></datalist></label>
-          <label>Visiting aircraft?<select id="visiting"><option value="no" selected>No</option><option value="yes">Yes (manual)</option></select></label>
-          <label id="fuelingWrap">Fueling<select id="fueling"><option value="no" selected>No</option><option value="yes">Yes</option></select></label>
-          <label>Aircraft type<input id="aircraft" placeholder="e.g. C172 / DA40" autocomplete="off" /></label>
-          <label>Registration<input id="registration" placeholder="e.g. LN-ABC" autocomplete="off" /></label>
-          <label>Status<select id="status"><option value="groundActive" selected>Ground active</option><option value="departure">Departure</option><option value="arrival">Arrival</option><option value="pattern">Pattern</option><option value="training">Training area</option><option value="crossCountry">Cross country</option><option value="encn">ENCN</option></select></label>
-          <label>Training<select id="training"><option value="none">None</option><option value="solo">Student solo</option><option value="instructor">With instructor</option></select></label>
-          <label id="instructorWrap">Instructor (3 letters)<input id="instructor" placeholder="e.g. ODJ" maxlength="3" autocomplete="off" /></label>
-          <label>Notes<input id="notes" placeholder="e.g. RWY 05 • TGL x3 • Local" autocomplete="off" /></label>
+        <select id="status" class="hiddenStatusSelect" aria-hidden="true" tabindex="-1">
+          <option value="groundActive" selected>Ground active</option>
+          <option value="departure">Departure</option>
+          <option value="arrival">Arrival</option>
+          <option value="pattern">Pattern</option>
+          <option value="training">Training area</option>
+          <option value="crossCountry">Cross country</option>
+          <option value="encn">ENCN</option>
+        </select>
+
+        <div class="editSection editPrimary">
+          <div class="sectionTitle">Identification</div>
+          <div class="editGrid identGrid">
+            <label class="fieldBig">Callsign<input id="callsign" placeholder="e.g. OJA123 / WF123" autocomplete="off" required /></label>
+            <label>Aircraft (based)<input id="aircraftPick" list="aircraftList" placeholder="Select LN-..." autocomplete="off" /><datalist id="aircraftList"></datalist></label>
+            <label>Visiting aircraft?<select id="visiting"><option value="no" selected>No</option><option value="yes">Yes (manual)</option></select></label>
+            <label>Aircraft type<input id="aircraft" placeholder="e.g. C172 / DA40" autocomplete="off" /></label>
+            <label>Registration<input id="registration" placeholder="e.g. LN-ABC" autocomplete="off" /></label>
+          </div>
         </div>
-        <div class="form-actions"><button type="button" class="btn danger" id="deleteBtn" hidden>Delete</button><div class="spacer"></div><button type="button" class="btn" id="cancelBtn">Cancel</button><button type="submit" class="btn primary" id="saveBtn">Save</button></div>
+
+        <div class="editSection">
+          <div class="sectionTitle">Status</div>
+          <div class="statusButtons" role="group" aria-label="Status">
+            <button type="button" class="statusBtn" data-status-btn="groundActive">GND ACTIVE</button>
+            <button type="button" class="statusBtn" data-status-btn="departure">DEP</button>
+            <button type="button" class="statusBtn" data-status-btn="arrival">ARR</button>
+            <button type="button" class="statusBtn" data-status-btn="pattern">PATTERN</button>
+            <button type="button" class="statusBtn" data-status-btn="training">TRAINING</button>
+            <button type="button" class="statusBtn" data-status-btn="crossCountry">X-C</button>
+            <button type="button" class="statusBtn" data-status-btn="encn">ENCN</button>
+          </div>
+          <div class="editGrid opsGrid">
+            <label id="fuelingWrap">Fueling<select id="fueling"><option value="no" selected>No</option><option value="yes">Yes</option></select></label>
+            <label>Training<select id="training"><option value="none">None</option><option value="solo">Student solo</option><option value="instructor">With instructor</option></select></label>
+            <label id="instructorWrap">Instructor (3 letters)<input id="instructor" placeholder="e.g. ODJ" maxlength="3" autocomplete="off" /></label>
+          </div>
+        </div>
+
+        <div class="editSection notesSection">
+          <div class="sectionTitle">Notes</div>
+          <label class="notesField"><textarea id="notes" placeholder="e.g. RWY 05 • TGL x3 • Local" autocomplete="off"></textarea></label>
+        </div>
+
+        <div class="form-actions editActions"><button type="button" class="btn danger" id="deleteBtn" hidden>Delete</button><div class="spacer"></div><button type="button" class="btn" id="cancelBtn">Cancel</button><button type="submit" class="btn primary" id="saveBtn">Save</button></div>
       </form>
     </div>
   </div>
@@ -77,6 +109,7 @@
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="changelogTitle">
       <div class="modal-header"><div class="modal-title" id="changelogTitle">Changelog</div><button class="iconbtn" id="closeChangelogBtn" aria-label="Close">✕</button></div>
       <div class="form" style="padding-top:10px;"><div style="color: var(--muted); font-size: 12px; line-height: 1.6;">
+        <div><b>0.8.1</b> – Larger iPad-friendly edit panel with quick status buttons</div>
         <div><b>0.8.0</b> – Fixed ops layout based on sketch: top DEP/ARR/TRN/X-C, bottom GND/PATTERN/ENCN, with soft Pattern limit alert</div>
         <div><b>0.7.4</b> – Smart layout experiment: empty columns auto-collapse, active/selected columns expand, strip inline buttons removed</div>
         <div><b>0.7.3</b> – iPad layout alignment and strip readability improvements</div>

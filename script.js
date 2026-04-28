@@ -1,7 +1,8 @@
-// v0.8.0 - fixed ops layout based on sketch + selected-strip controls
+// v0.8.2 - robust iPad state persistence
 
 (function () {
   const STORAGE_KEY = "gullknapp_strips_v06";
+  const STORAGE_META_KEY = "gullknapp_strips_meta_v082";
   const DB_URL = "./aircraft_db.json";
 
   const COLUMNS = ["departure","arrival","training","crossCountry","groundActive","pattern","encn"];
@@ -134,7 +135,22 @@
   }
 
   function saveStrips() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.strips));
+    // localStorage is synchronous, which is useful on iPad/Safari when the browser
+    // may suspend the tab quickly after switching apps. Keep this function small
+    // and call it after every state/order change.
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.strips));
+      localStorage.setItem(STORAGE_META_KEY, JSON.stringify({
+        savedAt: new Date().toISOString(),
+        selectedStripId
+      }));
+    } catch (err) {
+      console.warn("Strip save failed", err);
+    }
+  }
+
+  function flushStateToStorage(){
+    saveStrips();
   }
 
   async function loadAircraftDB() {
@@ -186,6 +202,19 @@
     if (!onGround) f.fueling.value = "no";
   }
 
+  function updateStatusButtons(){
+    const current = normalizeStatus(f.status.value);
+    document.querySelectorAll("[data-status-btn]").forEach(btn => {
+      btn.classList.toggle("active", normalizeStatus(btn.dataset.statusBtn) === current);
+    });
+  }
+
+  function setFormStatus(status){
+    f.status.value = normalizeStatus(status);
+    updateFuelingVisibility();
+    updateStatusButtons();
+  }
+
   function updateInstructorVisibility(){
     const t = f.training.value;
     const show = (t === "instructor");
@@ -215,7 +244,7 @@
       f.visiting.value = "no";
       f.aircraft.value = "";
       f.registration.value = "";
-      f.status.value = "groundActive";
+      setFormStatus("groundActive");
       f.fueling.value = "no";
       f.training.value = "none";
       f.instructor.value = "";
@@ -240,7 +269,7 @@
 
     f.aircraft.value = strip.aircraft || "";
     f.registration.value = strip.registration || "";
-    f.status.value = normalizeStatus(strip.status);
+    setFormStatus(strip.status);
     f.fueling.value = strip.fueling ? "yes" : "no";
     f.training.value = strip.training || "none";
     f.instructor.value = strip.instructor || "";
@@ -593,7 +622,10 @@
   });
 
   f.training.addEventListener("change", updateInstructorVisibility);
-  f.status.addEventListener("change", updateFuelingVisibility);
+  f.status.addEventListener("change", () => { updateFuelingVisibility(); updateStatusButtons(); });
+  document.querySelectorAll("[data-status-btn]").forEach(btn => {
+    btn.addEventListener("click", () => setFormStatus(btn.dataset.statusBtn));
+  });
 
   clearAllBtn.addEventListener("click", () => {
     closeMenu();
@@ -719,6 +751,19 @@
       closeModal();
     }
   });
+
+  // iPad/Safari persistence guards. These fire when the user switches apps,
+  // locks the iPad, opens another tab, or Safari decides to freeze the page.
+  window.addEventListener("pagehide", flushStateToStorage);
+  window.addEventListener("beforeunload", flushStateToStorage);
+  window.addEventListener("blur", flushStateToStorage);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") flushStateToStorage();
+  });
+  document.addEventListener("freeze", flushStateToStorage);
+
+  // Extra safety net: save periodically even if no button/drag event happens.
+  setInterval(flushStateToStorage, 5000);
 
   // Init
   loadStrips();
