@@ -1,4 +1,4 @@
-// v0.7.2 - aircraft database + picker + selected-strip controls
+// v0.7.4 - aircraft database + picker + selected-strip controls + smart layout
 
 (function () {
   const STORAGE_KEY = "gullknapp_strips_v06";
@@ -36,6 +36,7 @@
   const summary = document.getElementById("summary");
   const clockLocal = document.getElementById("clockLocal");
   const clockUtc = document.getElementById("clockUtc");
+  const board = document.getElementById("board");
 
   // Form
   const f = {
@@ -309,6 +310,7 @@
     document.querySelectorAll(".strip").forEach(el => {
       el.classList.toggle("selected", !!selectedStripId && el.dataset.id === selectedStripId);
     });
+    updateSmartLayout();
   }
 
   function updateSelectedControls(){
@@ -341,6 +343,50 @@
 
   function clearSelectedStrip(){
     setSelectedStrip(null);
+  }
+
+  function updateSmartLayout(){
+    if (!board) return;
+
+    const topCols = ["departure","arrival","pattern","training","crossCountry"];
+    const selected = getSelectedStrip();
+    const selectedColumn = selected ? normalizeStatus(selected.status) : null;
+
+    const countByColumn = Object.fromEntries(COLUMNS.map(c => [
+      c,
+      state.strips.filter(s => normalizeStatus(s.status) === c).length
+    ]));
+
+    const gridParts = topCols.map(col => {
+      const used = countByColumn[col] > 0;
+      const primary = selectedColumn === col;
+      if (!used) return "56px";
+      if (primary) return "minmax(300px, 1.55fr)";
+      return "minmax(240px, 1fr)";
+    });
+
+    board.style.setProperty("--top-grid", gridParts.join(" "));
+    board.classList.toggle("ground-empty", countByColumn.groundActive === 0);
+
+    document.querySelectorAll(".column").forEach(colEl => {
+      const col = colEl.dataset.column;
+      const count = countByColumn[col] || 0;
+      const isPrimary = selectedColumn === col;
+      const collapsed = count === 0;
+      colEl.classList.toggle("collapsed", collapsed);
+      colEl.classList.toggle("primary", isPrimary && !collapsed);
+
+      const meta = colEl.querySelector(".column-meta");
+      if (meta){
+        if (collapsed) meta.textContent = "0";
+        else if (col === "groundActive") meta.textContent = "Taxi / Parked / Fueling";
+        else if (col === "departure") meta.textContent = "Ready / outbound";
+        else if (col === "arrival") meta.textContent = "Inbound";
+        else if (col === "pattern") meta.textContent = "Circuit / TGL";
+        else if (col === "training") meta.textContent = "Local area";
+        else if (col === "crossCountry") meta.textContent = "Navigation";
+      }
+    });
   }
 
   function render() {
@@ -411,27 +457,7 @@
           </div>
           <div class="notesLine">${remarks}</div>
         </div>
-        <div class="actions">
-          <button class="miniBtn editbtn" title="Edit">EDIT</button>
-          <button class="miniBtn delbtn" title="Delete">DEL</button>
-        </div>
       `;
-
-      el.querySelector(".editbtn").addEventListener("click", (ev) => {
-        ev.stopPropagation();
-        const s = state.strips.find(x => x.id === strip.id);
-        if (s) openModal("edit", s);
-      });
-
-      el.querySelector(".delbtn").addEventListener("click", (ev) => {
-        ev.stopPropagation();
-        if (confirm(`Delete ${strip.callsign}?`)) {
-          state.strips = state.strips.filter(x => x.id !== strip.id);
-          if (selectedStripId === strip.id) selectedStripId = null;
-          saveStrips();
-          render();
-        }
-      });
 
       el.addEventListener("click", (ev) => {
         ev.stopPropagation();
@@ -453,6 +479,7 @@
     setPatternAlert();
     computeSummary();
     updateSelectedControls();
+    updateSmartLayout();
     saveStrips();
   }
 
@@ -602,6 +629,7 @@
     closeMenu();
     if (!confirm("Clear ALL strips from the board?")) return;
     state.strips = [];
+    selectedStripId = null;
     saveStrips();
     render();
   });
@@ -645,6 +673,7 @@
       // normalize
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state.strips));
       loadStrips();
+      selectedStripId = null;
       render();
       alert("Import successful.");
     } catch (err) {
