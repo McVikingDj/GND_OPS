@@ -11,9 +11,9 @@
     <div class="brand">
       <div class="title">GULLKNAPP OPS STRIP BOARD</div>
       <div class="subtitle">ATC strip board • drag & drop • local save</div>
-      <div class="version">VERSION 0.7.4</div>
+      <div class="version">VERSION 0.8.0</div>
     </div>
-    <div class="summary" id="summary">GND ACTIVE: 0 • DEP: 0 • ARR: 0 • PATTERN: 0 • TRAIN: 0 • X-C: 0 • SOLO: 0 • INSTRUCTOR: 0 • TOTAL: 0</div>
+    <div class="summary" id="summary">GND ACTIVE: 0 • DEP: 0 • ARR: 0 • PATTERN: 0 • TRAIN: 0 • X-C: 0 • ENCN: 0 • TOTAL: 0</div>
     <div class="clocks">
       <div class="clock"><div class="clock-label">LOCAL (Europe/Oslo)</div><div class="clock-value" id="clockLocal">--:--:--</div></div>
       <div class="clock"><div class="clock-label">UTC</div><div class="clock-value" id="clockUtc">--:--:--</div></div>
@@ -42,12 +42,13 @@
   </section>
 
   <main class="board" id="board">
-    <section class="column" data-column="groundActive"><header class="column-header"><h2>GROUND ACTIVE</h2><div class="column-meta">Taxi / Parked / Fueling</div></header><div class="strip-container"></div></section>
     <section class="column" data-column="departure"><header class="column-header"><h2>DEPARTURE</h2><div class="column-meta">Ready / outbound</div></header><div class="strip-container"></div></section>
     <section class="column" data-column="arrival"><header class="column-header"><h2>ARRIVAL</h2><div class="column-meta">Inbound</div></header><div class="strip-container"></div></section>
-    <section class="column" data-column="pattern"><header class="column-header"><h2>PATTERN</h2><div class="column-meta">Circuit / TGL</div></header><div class="strip-container"></div></section>
     <section class="column" data-column="training"><header class="column-header"><h2>TRAINING AREA</h2><div class="column-meta">Local area</div></header><div class="strip-container"></div></section>
-    <section class="column" data-column="crossCountry"><header class="column-header"><h2>CROSS COUNTRY</h2><div class="column-meta">Navigation</div></header><div class="strip-container"></div></section>
+    <section class="column" data-column="crossCountry"><header class="column-header"><h2>X-COUNTRY</h2><div class="column-meta">Navigation</div></header><div class="strip-container"></div></section>
+    <section class="column" data-column="groundActive"><header class="column-header"><h2>GND ACTIVE</h2><div class="column-meta">Taxi / Parked / Fueling</div></header><div class="strip-container"></div></section>
+    <section class="column" data-column="pattern"><header class="column-header"><h2>PATTERN</h2><div class="column-meta">Max 2 strips</div></header><div class="strip-container"></div></section>
+    <section class="column" data-column="encn"><header class="column-header"><h2>ENCN</h2><div class="column-meta">Enroute / standby</div></header><div class="strip-container"></div></section>
   </main>
 
   <div class="modal-backdrop hidden" id="modalBackdrop" aria-hidden="true">
@@ -62,7 +63,7 @@
           <label id="fuelingWrap">Fueling<select id="fueling"><option value="no" selected>No</option><option value="yes">Yes</option></select></label>
           <label>Aircraft type<input id="aircraft" placeholder="e.g. C172 / DA40" autocomplete="off" /></label>
           <label>Registration<input id="registration" placeholder="e.g. LN-ABC" autocomplete="off" /></label>
-          <label>Status<select id="status"><option value="groundActive" selected>Ground active</option><option value="departure">Departure</option><option value="arrival">Arrival</option><option value="pattern">Pattern</option><option value="training">Training area</option><option value="crossCountry">Cross country</option></select></label>
+          <label>Status<select id="status"><option value="groundActive" selected>Ground active</option><option value="departure">Departure</option><option value="arrival">Arrival</option><option value="pattern">Pattern</option><option value="training">Training area</option><option value="crossCountry">Cross country</option><option value="encn">ENCN</option></select></label>
           <label>Training<select id="training"><option value="none">None</option><option value="solo">Student solo</option><option value="instructor">With instructor</option></select></label>
           <label id="instructorWrap">Instructor (3 letters)<input id="instructor" placeholder="e.g. ODJ" maxlength="3" autocomplete="off" /></label>
           <label>Notes<input id="notes" placeholder="e.g. RWY 05 • TGL x3 • Local" autocomplete="off" /></label>
@@ -76,7 +77,8 @@
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="changelogTitle">
       <div class="modal-header"><div class="modal-title" id="changelogTitle">Changelog</div><button class="iconbtn" id="closeChangelogBtn" aria-label="Close">✕</button></div>
       <div class="form" style="padding-top:10px;"><div style="color: var(--muted); font-size: 12px; line-height: 1.6;">
-        <div><b>0.7.4</b> – Smart layout: empty columns auto-collapse, active/selected columns expand, strip inline buttons removed</div>
+        <div><b>0.8.0</b> – Fixed ops layout based on sketch: top DEP/ARR/TRN/X-C, bottom GND/PATTERN/ENCN, with soft Pattern limit alert</div>
+        <div><b>0.7.4</b> – Smart layout experiment: empty columns auto-collapse, active/selected columns expand, strip inline buttons removed</div>
         <div><b>0.7.3</b> – iPad layout alignment and strip readability improvements</div>
         <div><b>0.7.2</b> – Selected-strip control system added to bottom bar: Edit, Delete and Clear</div>
         <div><b>0.7.1</b> – Wide layout with Ground Active as lower bay and larger readable strips</div>

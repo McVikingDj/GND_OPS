@@ -1,10 +1,10 @@
-// v0.7.4 - aircraft database + picker + selected-strip controls + smart layout
+// v0.8.0 - fixed ops layout based on sketch + selected-strip controls
 
 (function () {
   const STORAGE_KEY = "gullknapp_strips_v06";
   const DB_URL = "./aircraft_db.json";
 
-  const COLUMNS = ["groundActive","departure","arrival","pattern","training","crossCountry"];
+  const COLUMNS = ["departure","arrival","training","crossCountry","groundActive","pattern","encn"];
   const VALID_STATUSES = new Set(COLUMNS);
   let state = { strips: [], db: [] };
   let selectedStripId = null;
@@ -105,6 +105,7 @@
     // Backwards compatibility for older stored/imported boards.
     if (s === "ground" || s === "fueling") return "groundActive";
     if (s === "airborne") return "departure";
+    if (s === "enroute" || s === "standby" || s === "ENCN") return "encn";
     return "groundActive";
   }
 
@@ -272,7 +273,8 @@
       arrival: "ARR",
       pattern: "TGL",
       training: "TRN",
-      crossCountry: "X-C"
+      crossCountry: "X-C",
+      encn: "ENCN"
     };
     return map[normalizeStatus(status)] || "GND";
   }
@@ -293,10 +295,11 @@
     const pat = state.strips.filter(s => s.status === "pattern").length;
     const trn = state.strips.filter(s => s.status === "training").length;
     const xc  = state.strips.filter(s => s.status === "crossCountry").length;
+    const encn = state.strips.filter(s => s.status === "encn").length;
     const solo = state.strips.filter(s => s.training === "solo").length;
     const instructor = state.strips.filter(s => s.training === "instructor").length;
     const total = state.strips.length;
-    summary.textContent = `GND ACTIVE: ${gnd} • DEP: ${dep} • ARR: ${arr} • PATTERN: ${pat} • TRAIN: ${trn} • X-C: ${xc} • SOLO: ${solo} • INSTRUCTOR: ${instructor} • TOTAL: ${total}`;
+    summary.textContent = `GND ACTIVE: ${gnd} • DEP: ${dep} • ARR: ${arr} • PATTERN: ${pat} • TRAIN: ${trn} • X-C: ${xc} • ENCN: ${encn} • SOLO: ${solo} • INSTRUCTOR: ${instructor} • TOTAL: ${total}`;
   }
 
 
@@ -346,46 +349,13 @@
   }
 
   function updateSmartLayout(){
-    if (!board) return;
-
-    const topCols = ["departure","arrival","pattern","training","crossCountry"];
+    // v0.8 uses a fixed, predictable ops layout. No auto-collapse or dynamic column resizing.
     const selected = getSelectedStrip();
     const selectedColumn = selected ? normalizeStatus(selected.status) : null;
-
-    const countByColumn = Object.fromEntries(COLUMNS.map(c => [
-      c,
-      state.strips.filter(s => normalizeStatus(s.status) === c).length
-    ]));
-
-    const gridParts = topCols.map(col => {
-      const used = countByColumn[col] > 0;
-      const primary = selectedColumn === col;
-      if (!used) return "56px";
-      if (primary) return "minmax(300px, 1.55fr)";
-      return "minmax(240px, 1fr)";
-    });
-
-    board.style.setProperty("--top-grid", gridParts.join(" "));
-    board.classList.toggle("ground-empty", countByColumn.groundActive === 0);
-
     document.querySelectorAll(".column").forEach(colEl => {
       const col = colEl.dataset.column;
-      const count = countByColumn[col] || 0;
-      const isPrimary = selectedColumn === col;
-      const collapsed = count === 0;
-      colEl.classList.toggle("collapsed", collapsed);
-      colEl.classList.toggle("primary", isPrimary && !collapsed);
-
-      const meta = colEl.querySelector(".column-meta");
-      if (meta){
-        if (collapsed) meta.textContent = "0";
-        else if (col === "groundActive") meta.textContent = "Taxi / Parked / Fueling";
-        else if (col === "departure") meta.textContent = "Ready / outbound";
-        else if (col === "arrival") meta.textContent = "Inbound";
-        else if (col === "pattern") meta.textContent = "Circuit / TGL";
-        else if (col === "training") meta.textContent = "Local area";
-        else if (col === "crossCountry") meta.textContent = "Navigation";
-      }
+      colEl.classList.toggle("primary", selectedColumn === col);
+      colEl.classList.remove("collapsed");
     });
   }
 
