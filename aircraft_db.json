@@ -30,6 +30,11 @@
     "notes": "OSM"
   },
   {
+    "registration": "SE-LZE",
+    "type": "C172",
+    "notes": "OSM"
+  },
+  {
     "registration": "SE-LZM",
     "type": "C172",
     "notes": "OSM"
@@ -53,5 +58,10 @@
     "registration": "SE-MLR",
     "type": "DA42",
     "notes": "OSM"
+  },
+  {
+    "registration": "LN-XXD",
+    "type": "8KCAB",
+    "notes": "URPT"
   }
 ]
