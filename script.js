@@ -1,4 +1,4 @@
-// v2.3 - aircraft database + picker, keeps manual type/REG for visitors + drag/drop
+// v0.7.2 - aircraft database + picker + selected-strip controls
 
 (function () {
   const STORAGE_KEY = "gullknapp_strips_v06";
@@ -7,6 +7,7 @@
   const COLUMNS = ["groundActive","departure","arrival","pattern","training","crossCountry"];
   const VALID_STATUSES = new Set(COLUMNS);
   let state = { strips: [], db: [] };
+  let selectedStripId = null;
 
   // DOM
   const modalBackdrop = document.getElementById("modalBackdrop");
@@ -14,6 +15,10 @@
   const modalTitle = document.getElementById("modalTitle");
 
   const newStripBtn = document.getElementById("newStripBtn");
+  const selectedEditBtn = document.getElementById("selectedEditBtn");
+  const selectedDeleteBtn = document.getElementById("selectedDeleteBtn");
+  const selectedClearBtn = document.getElementById("selectedClearBtn");
+  const selectionReadout = document.getElementById("selectionReadout");
   const closeModalBtn = document.getElementById("closeModalBtn");
   const cancelBtn = document.getElementById("cancelBtn");
   const deleteBtn = document.getElementById("deleteBtn");
@@ -293,6 +298,51 @@
     summary.textContent = `GND ACTIVE: ${gnd} • DEP: ${dep} • ARR: ${arr} • PATTERN: ${pat} • TRAIN: ${trn} • X-C: ${xc} • SOLO: ${solo} • INSTRUCTOR: ${instructor} • TOTAL: ${total}`;
   }
 
+
+  function getSelectedStrip(){
+    return state.strips.find(s => s.id === selectedStripId) || null;
+  }
+
+  function setSelectedStrip(id){
+    selectedStripId = id ? String(id) : null;
+    updateSelectedControls();
+    document.querySelectorAll(".strip").forEach(el => {
+      el.classList.toggle("selected", !!selectedStripId && el.dataset.id === selectedStripId);
+    });
+  }
+
+  function updateSelectedControls(){
+    const s = getSelectedStrip();
+    const hasSelection = !!s;
+    if (selectedEditBtn) selectedEditBtn.disabled = !hasSelection;
+    if (selectedDeleteBtn) selectedDeleteBtn.disabled = !hasSelection;
+    if (selectedClearBtn) selectedClearBtn.disabled = !hasSelection;
+    if (selectionReadout){
+      selectionReadout.classList.toggle("active", hasSelection);
+      selectionReadout.textContent = hasSelection ? `${s.callsign || "—"}  •  ${s.registration || "—"}` : "NO STRIP SELECTED";
+    }
+  }
+
+  function editSelectedStrip(){
+    const s = getSelectedStrip();
+    if (s) openModal("edit", s);
+  }
+
+  function deleteSelectedStrip(){
+    const s = getSelectedStrip();
+    if (!s) return;
+    if (confirm(`Delete ${s.callsign}?`)){
+      state.strips = state.strips.filter(x => x.id !== s.id);
+      selectedStripId = null;
+      saveStrips();
+      render();
+    }
+  }
+
+  function clearSelectedStrip(){
+    setSelectedStrip(null);
+  }
+
   function render() {
     document.querySelectorAll(".strip-container").forEach(c => c.innerHTML = "");
 
@@ -304,7 +354,7 @@
       }
 
       const el = document.createElement("div");
-      el.className = "strip" + (strip.training === "solo" ? " solo" : "");
+      el.className = "strip" + (strip.training === "solo" ? " solo" : "") + (strip.id === selectedStripId ? " selected" : "");
       el.dataset.id = strip.id;
       el.dataset.status = strip.status;
       el.dataset.fueling = strip.fueling ? "yes" : "no";
@@ -377,12 +427,19 @@
         ev.stopPropagation();
         if (confirm(`Delete ${strip.callsign}?`)) {
           state.strips = state.strips.filter(x => x.id !== strip.id);
+          if (selectedStripId === strip.id) selectedStripId = null;
           saveStrips();
           render();
         }
       });
 
-      el.addEventListener("click", () => {
+      el.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        setSelectedStrip(strip.id);
+      });
+
+      el.addEventListener("dblclick", (ev) => {
+        ev.stopPropagation();
         const s = state.strips.find(x => x.id === strip.id);
         if (s) openModal("edit", s);
       });
@@ -392,8 +449,10 @@
       if (container) container.appendChild(el);
     }
 
+    if (selectedStripId && !state.strips.some(s => s.id === selectedStripId)) selectedStripId = null;
     setPatternAlert();
     computeSummary();
+    updateSelectedControls();
     saveStrips();
   }
 
@@ -465,6 +524,9 @@
 
   // Events
   newStripBtn.addEventListener("click", () => openModal("new"));
+  if (selectedEditBtn) selectedEditBtn.addEventListener("click", editSelectedStrip);
+  if (selectedDeleteBtn) selectedDeleteBtn.addEventListener("click", deleteSelectedStrip);
+  if (selectedClearBtn) selectedClearBtn.addEventListener("click", clearSelectedStrip);
 
   // Menu toggle
   function openChangelog(){

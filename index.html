@@ -11,7 +11,7 @@
     <div class="brand">
       <div class="title">GULLKNAPP OPS STRIP BOARD</div>
       <div class="subtitle">ATC strip board • drag & drop • local save</div>
-      <div class="version">VERSION 0.7.1</div>
+      <div class="version">VERSION 0.7.2</div>
     </div>
     <div class="summary" id="summary">GND ACTIVE: 0 • DEP: 0 • ARR: 0 • PATTERN: 0 • TRAIN: 0 • X-C: 0 • SOLO: 0 • INSTRUCTOR: 0 • TOTAL: 0</div>
     <div class="clocks">
@@ -32,7 +32,13 @@
       </div>
     </div>
     <button id="newStripBtn" class="btn primary" title="Shortcut: N">+ Add aircraft</button>
-    <div class="hint">Drag strips between columns • Click a strip to edit • Shortcut: <b>N</b> new, <b>Esc</b> close</div>
+    <div class="controlGroup" aria-label="Selected strip controls">
+      <div class="selectionReadout" id="selectionReadout">NO STRIP SELECTED</div>
+      <button id="selectedEditBtn" class="btn stripControl" disabled>EDIT</button>
+      <button id="selectedDeleteBtn" class="btn stripControl danger" disabled>DELETE</button>
+      <button id="selectedClearBtn" class="btn stripControl" disabled>CLEAR</button>
+    </div>
+    <div class="hint">Click strip to select • Double-click to edit • Drag strips between columns • <b>N</b> new</div>
   </section>
 
   <main class="board" id="board">
@@ -70,6 +76,8 @@
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="changelogTitle">
       <div class="modal-header"><div class="modal-title" id="changelogTitle">Changelog</div><button class="iconbtn" id="closeChangelogBtn" aria-label="Close">✕</button></div>
       <div class="form" style="padding-top:10px;"><div style="color: var(--muted); font-size: 12px; line-height: 1.6;">
+        <div><b>0.7.2</b> – Selected-strip control system added to bottom bar: Edit, Delete and Clear</div>
+        <div><b>0.7.1</b> – Wide layout with Ground Active as lower bay and larger readable strips</div>
         <div><b>0.7.0</b> – ATC-style visual rework: compact rectangular strips, dark panels and bottom control bar</div>
         <div><b>0.6.2</b> – Code cleanup: fixed HTML nesting, status consistency and fueling save logic</div>
         <div><b>0.6.1</b> – Columns compacted so all 6 fit better on one screen</div>
