@@ -248,7 +248,8 @@ body{
   .statusButtons{grid-template-columns:repeat(2,minmax(0,1fr));}
 }
 
-/* v0.8.2-watermark - subtle OSM Aviation Academy background watermark */
+
+/* v0.8.2 WM fix - OSM watermark without moving the fixed bottom control bar */
 body{
   position:relative;
 }
@@ -259,16 +260,34 @@ body::before{
   background-image:url("osmaa_logotype_vertical.png");
   background-repeat:no-repeat;
   background-position:center center;
-  background-size:min(42vw, 460px);
-  opacity:0.045;
+  background-size:min(48vw, 540px);
+  opacity:0.095;
   pointer-events:none;
   z-index:0;
 }
 .topbar,
-.board,
-.controls,
-.modal-backdrop,
-.wip-banner{
+.board{
   position:relative;
   z-index:1;
+}
+.controls{
+  /* keep original fixed bottom bar behavior */
+  z-index:100;
+}
+.modal-backdrop{
+  z-index:300;
+}
+/* Make panels translucent enough for the watermark to show through, while keeping strip readability */
+.board{
+  background:transparent;
+}
+.column{
+  background:linear-gradient(135deg, rgba(31,31,31,0.74) 0%, rgba(37,37,37,0.58) 45%, rgba(25,25,25,0.74) 100%);
+  border-color:rgba(68,68,68,0.92);
+}
+.strip-container{
+  background:rgba(0,0,0,0.08);
+}
+.column-header{
+  background:linear-gradient(rgba(32,32,32,0.94), rgba(17,17,17,0.94));
 }
