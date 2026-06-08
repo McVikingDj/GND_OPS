@@ -33,6 +33,7 @@
     metricAirborne: document.getElementById("metricAirborne"),
     metricInbound: document.getElementById("metricInbound"),
     metricAway: document.getElementById("metricAway"),
+    activeList: document.getElementById("activeList"),
     clockLocal: document.getElementById("clockLocal"),
     clockUtc: document.getElementById("clockUtc"),
     selectedCard: document.getElementById("selectedCard"),
@@ -63,16 +64,6 @@
     flagInstructor: document.getElementById("flagInstructor"),
     flagFuel: document.getElementById("flagFuel"),
     note: document.getElementById("note")
-  };
-
-  const listByPosition = {
-    ground: document.getElementById("listGround"),
-    movement: document.getElementById("listMovement"),
-    pattern: document.getElementById("listPattern"),
-    local: document.getElementById("listLocal"),
-    inbound: document.getElementById("listInbound"),
-    outbound: document.getElementById("listOutbound"),
-    away: document.getElementById("listAway")
   };
 
   function nowId() {
@@ -191,47 +182,83 @@
     return tags.join("");
   }
 
+  function priority(item) {
+    const order = {
+      inbound: 0,
+      pattern: 1,
+      movement: 2,
+      outbound: 3,
+      local: 4,
+      ground: 5,
+      away: 9
+    };
+    let score = order[item.position] ?? 8;
+    if (item.flags.fuel) score -= 0.25;
+    if (item.flags.solo) score -= 0.15;
+    return score;
+  }
+
+  function sortedAircraft(items) {
+    return [...items].sort((a, b) => {
+      const byPriority = priority(a) - priority(b);
+      if (byPriority !== 0) return byPriority;
+      return (a.updatedAt || 0) - (b.updatedAt || 0);
+    });
+  }
+
   function makeAircraftTile(item) {
-    const tile = document.createElement("article");
-    tile.className = [
-      "aircraftTile",
+    const row = document.createElement("article");
+    row.className = [
+      "aircraftRow",
       item.operatorType === "Visitor" ? "visitor" : "",
       item.flags.solo ? "solo" : "",
       item.flags.fuel ? "fuel" : "",
       item.id === selectedId ? "selected" : ""
     ].filter(Boolean).join(" ");
-    tile.dataset.id = item.id;
-    tile.dataset.position = item.position;
-    tile.innerHTML = `
-      <div class="positionStripe"></div>
-      <div class="tileGrid">
-        <div class="tileMain">
-          <div class="tileLabel">Callsign</div>
-          <div class="tileCallsign">${escapeHtml(item.callsign)}</div>
-          <div class="tileSub">${escapeHtml([item.type, item.registration].filter(Boolean).join(" · ") || "-")}</div>
-        </div>
-        <div class="tileState">
-          <div class="tileLabel">State</div>
-          <div class="tileValue">${POSITION_SHORT[item.position]}</div>
-        </div>
-        <div class="tileNote">
-          ${buildTags(item)}
-          <span class="noteText">${escapeHtml(item.note || item.intention || "")}</span>
-        </div>
+    row.dataset.id = item.id;
+    row.dataset.position = item.position;
+    row.innerHTML = `
+      <div class="stripe"></div>
+      <div class="rowCell">
+        <div class="rowLabel">Callsign</div>
+        <div class="callsign">${escapeHtml(item.callsign)}</div>
+        <div class="secondaryText">${escapeHtml([item.type, item.registration].filter(Boolean).join(" · ") || "-")}</div>
+      </div>
+      <div class="rowCell intentCell">
+        <div class="rowLabel">Intention</div>
+        <div class="primaryText">${escapeHtml(item.intention || "Unknown")}</div>
+        <div class="tags">${buildTags(item)}</div>
+      </div>
+      <div class="rowCell">
+        <div class="rowLabel">Position</div>
+        <div class="primaryText">${escapeHtml(POSITION_LABELS[item.position])}</div>
+        <div class="secondaryText">${item.operatorType === "Visitor" ? "Visitor" : "OSM"}</div>
+      </div>
+      <div class="rowCell noteCell">
+        <div class="rowLabel">OPS note</div>
+        <div class="primaryText">${escapeHtml(item.note || "-")}</div>
+      </div>
+      <div class="rowCell stateCell">
+        <div class="rowLabel">State</div>
+        <div class="stateText">${POSITION_SHORT[item.position]}</div>
       </div>
     `;
-    tile.addEventListener("click", () => {
+    row.addEventListener("click", () => {
       selectedId = item.id;
       render();
     });
-    tile.addEventListener("dblclick", () => openModal("edit", item));
-    return tile;
+    row.addEventListener("dblclick", () => openModal("edit", item));
+    return row;
   }
 
   function renderLists() {
-    for (const pos of POSITIONS) listByPosition[pos].innerHTML = "";
-    for (const item of aircraft) {
-      listByPosition[item.position].appendChild(makeAircraftTile(item));
+    els.activeList.innerHTML = "";
+    els.listAway.innerHTML = "";
+    for (const item of sortedAircraft(aircraft.filter(entry => entry.position !== "away"))) {
+      els.activeList.appendChild(makeAircraftTile(item));
+    }
+    for (const item of sortedAircraft(aircraft.filter(entry => entry.position === "away"))) {
+      els.listAway.appendChild(makeAircraftTile(item));
     }
   }
 
@@ -246,10 +273,6 @@
     els.metricInbound.textContent = String(count.inbound);
     els.metricAway.textContent = String(count.away);
     els.summaryLine.textContent = `Active ${active} · Ground ${count.ground + count.movement} · Airborne ${airborne} · Away ${count.away}`;
-
-    document.querySelectorAll("[data-count]").forEach(el => {
-      el.textContent = String(count[el.dataset.count] || 0);
-    });
   }
 
   function renderSelected() {
@@ -264,24 +287,16 @@
     buttons.forEach(button => { button.disabled = !item; });
 
     if (!item) {
-      els.selectedCard.className = "selectedCard empty";
-      els.selectedCard.innerHTML = "<strong>No aircraft selected</strong><p>Tap an aircraft to update position or intention.</p>";
+      els.selectedCard.className = "selectedBlock empty";
+      els.selectedCard.innerHTML = "<strong>No aircraft selected</strong><span>Tap a row to update it</span>";
       return;
     }
 
     const airMs = getAirMs(item);
-    els.selectedCard.className = "selectedCard";
+    els.selectedCard.className = "selectedBlock active";
     els.selectedCard.innerHTML = `
-      <strong>${escapeHtml(item.callsign)}</strong>
-      <p>${escapeHtml(item.note || "No note added.")}</p>
-      <div class="selectedDetail">
-        <div><span>Position</span><b>${POSITION_LABELS[item.position]}</b></div>
-        <div><span>Intention</span><b>${escapeHtml(item.intention)}</b></div>
-        <div><span>Aircraft</span><b>${escapeHtml(item.type || "-")}</b></div>
-        <div><span>Registration</span><b>${escapeHtml(item.registration || "-")}</b></div>
-        <div><span>Operator</span><b>${escapeHtml(item.operatorType)}</b></div>
-        <div><span>Air time</span><b>${airMs == null ? "-" : formatDuration(airMs)}</b></div>
-      </div>
+      <strong>${escapeHtml(item.callsign)} · ${escapeHtml(POSITION_SHORT[item.position])}</strong>
+      <span>${escapeHtml(item.type || "-")} ${escapeHtml(item.registration || "")} · ${escapeHtml(item.intention)}${airMs == null ? "" : ` · AIR ${formatDuration(airMs)}`}</span>
     `;
   }
 
@@ -536,7 +551,7 @@
     els.deleteFromModalBtn.addEventListener("click", closeSelectedAircraft);
     els.toggleAwayBtn.addEventListener("click", () => {
       const collapsed = els.listAway.classList.toggle("collapsed");
-      els.toggleAwayBtn.textContent = collapsed ? "Show list" : "Hide list";
+      els.toggleAwayBtn.setAttribute("aria-expanded", String(!collapsed));
     });
 
     document.querySelectorAll("[data-action-position]").forEach(button => {

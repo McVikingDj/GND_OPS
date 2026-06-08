@@ -17,129 +17,70 @@
         </div>
       </div>
 
-      <div class="trafficSummary">
-        <div class="summaryLabel">ENGK situational board</div>
-        <div class="summaryLine" id="summaryLine">Active 0 · Ground 0 · Airborne 0 · Away 0</div>
+      <div class="summary">
+        <span id="summaryLine">Active 0 · Airborne 0 · Away 0</span>
       </div>
 
-      <div class="clockStack">
-        <div class="clockBox">
-          <span>Local</span>
-          <strong id="clockLocal">--:--:--</strong>
-        </div>
-        <div class="clockBox">
-          <span>UTC</span>
-          <strong id="clockUtc">--:--:--</strong>
-        </div>
+      <div class="clocks">
+        <div><span>Local</span><b id="clockLocal">--:--:--</b></div>
+        <div><span>UTC</span><b id="clockUtc">--:--:--</b></div>
       </div>
     </header>
 
-    <main class="workspace">
-      <section class="boardSurface" aria-label="Aircraft overview">
-        <div class="focusPanel">
-          <div class="focusLabel">ENGK Local Picture</div>
-          <div class="focusNumber" id="localTrafficCount">0</div>
-          <div class="focusText">aircraft needing OPS awareness</div>
-          <div class="focusMetrics">
-            <div><strong id="metricGround">0</strong><span>Ground</span></div>
-            <div><strong id="metricAirborne">0</strong><span>Airborne</span></div>
-            <div><strong id="metricInbound">0</strong><span>Inbound</span></div>
-            <div><strong id="metricAway">0</strong><span>Away</span></div>
-          </div>
-        </div>
-
-        <section class="lane laneGround" data-position="ground">
-          <header><div><span>Apron / parking</span><h2>Ground</h2></div><b data-count="ground">0</b></header>
-          <div class="aircraftList" id="listGround"></div>
-        </section>
-
-        <section class="lane laneMovement" data-position="movement">
-          <header><div><span>Taxi / runway</span><h2>Movement</h2></div><b data-count="movement">0</b></header>
-          <div class="aircraftList" id="listMovement"></div>
-        </section>
-
-        <section class="lane lanePattern" data-position="pattern">
-          <header><div><span>Circuit traffic</span><h2>Pattern</h2></div><b data-count="pattern">0</b></header>
-          <div class="aircraftList" id="listPattern"></div>
-        </section>
-
-        <section class="lane laneLocal" data-position="local">
-          <header><div><span>Training area / nearby</span><h2>Local Area</h2></div><b data-count="local">0</b></header>
-          <div class="aircraftList" id="listLocal"></div>
-        </section>
-
-        <section class="lane laneInbound" data-position="inbound">
-          <header><div><span>Approaching ENGK</span><h2>Inbound</h2></div><b data-count="inbound">0</b></header>
-          <div class="aircraftList" id="listInbound"></div>
-        </section>
-
-        <section class="lane laneOutbound" data-position="outbound">
-          <header><div><span>Leaving local area</span><h2>Outbound</h2></div><b data-count="outbound">0</b></header>
-          <div class="aircraftList" id="listOutbound"></div>
-        </section>
-
-        <section class="awayPanel" data-position="away">
+    <main class="trafficView">
+      <section class="trafficStack" aria-label="Active aircraft">
+        <header class="stackHeader">
           <div>
-            <span>Changed frequency / no longer close</span>
-            <h2>Away</h2>
+            <span>ENGK active traffic</span>
+            <h2>Aircraft</h2>
           </div>
-          <button id="toggleAwayBtn" type="button">Show list</button>
-          <strong><span data-count="away">0</span> aircraft</strong>
+          <div class="stackMetrics">
+            <div><b id="localTrafficCount">0</b><small>Active</small></div>
+            <div><b id="metricGround">0</b><small>Ground</small></div>
+            <div><b id="metricAirborne">0</b><small>Airborne</small></div>
+            <div><b id="metricInbound">0</b><small>Inbound</small></div>
+          </div>
+        </header>
+
+        <div class="aircraftList" id="activeList"></div>
+
+        <section class="awaySummary">
+          <button id="toggleAwayBtn" type="button">
+            <span>Away / changed frequency</span>
+            <b><span id="metricAway">0</span> aircraft</b>
+          </button>
           <div class="aircraftList awayList collapsed" id="listAway"></div>
         </section>
       </section>
-
-      <aside class="sidePanel" aria-label="Selected aircraft panel">
-        <div class="selectedHeader">
-          <span>Selected aircraft</span>
-          <button id="clearSelectionBtn" type="button" disabled>Clear</button>
-        </div>
-        <div class="selectedCard empty" id="selectedCard">
-          <strong>No aircraft selected</strong>
-          <p>Tap an aircraft to update position or intention.</p>
-        </div>
-
-        <div class="actionBlock">
-          <h3>Position</h3>
-          <div class="actionGrid" id="positionActions">
-            <button data-action-position="ground" disabled>Ground</button>
-            <button data-action-position="movement" disabled>Taxi / RWY</button>
-            <button data-action-position="pattern" disabled>Pattern</button>
-            <button data-action-position="local" disabled>Local Area</button>
-            <button data-action-position="inbound" disabled>Inbound</button>
-            <button data-action-position="outbound" disabled>Outbound</button>
-            <button data-action-position="away" disabled>Away</button>
-          </div>
-        </div>
-
-        <div class="actionBlock">
-          <h3>Intention</h3>
-          <div class="actionGrid" id="intentionActions">
-            <button data-action-intention="Departure" disabled>Departure</button>
-            <button data-action-intention="Arrival" disabled>Arrival</button>
-            <button data-action-intention="TGL" disabled>TGL</button>
-            <button data-action-intention="Local training" disabled>Training</button>
-            <button data-action-intention="Fuel" disabled>Fuel</button>
-            <button data-action-intention="Parking" disabled>Parking</button>
-          </div>
-        </div>
-
-        <div class="actionBlock">
-          <h3>Tools</h3>
-          <div class="toolGrid">
-            <button id="editAircraftBtn" type="button" disabled>Edit</button>
-            <button id="closeAircraftBtn" type="button" class="danger" disabled>Close</button>
-          </div>
-        </div>
-      </aside>
     </main>
 
-    <footer class="bottomBar">
+    <footer class="controlBar">
       <button id="addAircraftBtn" class="primary" type="button">Add Aircraft</button>
-      <button id="demoBtn" type="button">Load Demo</button>
-      <button id="exportBtn" type="button">Export</button>
-      <label class="importButton">Import<input id="importFile" type="file" accept="application/json" /></label>
-      <button id="clearAllBtn" class="danger ghostDanger" type="button">Clear Board</button>
+
+      <div class="selectedBlock" id="selectedCard">
+        <strong>No aircraft selected</strong>
+        <span>Tap a row to update it</span>
+      </div>
+
+      <div class="quickActions">
+        <button data-action-position="ground" disabled>Ground</button>
+        <button data-action-position="movement" disabled>Taxi</button>
+        <button data-action-position="pattern" disabled>Pattern</button>
+        <button data-action-position="local" disabled>Local</button>
+        <button data-action-position="inbound" disabled>Inbound</button>
+        <button data-action-position="outbound" disabled>Out</button>
+        <button data-action-position="away" disabled>Away</button>
+        <button id="editAircraftBtn" type="button" disabled>Edit</button>
+        <button id="closeAircraftBtn" type="button" class="danger" disabled>Close</button>
+        <button id="clearSelectionBtn" type="button" disabled>Clear</button>
+      </div>
+
+      <div class="utilityMenu">
+        <button id="demoBtn" type="button">Demo</button>
+        <button id="exportBtn" type="button">Export</button>
+        <label class="importButton">Import<input id="importFile" type="file" accept="application/json" /></label>
+        <button id="clearAllBtn" class="danger ghostDanger" type="button">Clear</button>
+      </div>
     </footer>
   </div>
 

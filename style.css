@@ -1,24 +1,21 @@
 :root{
   --bg:#101417;
   --panel:#1b2228;
-  --panel2:#222b33;
-  --panel3:#0e1317;
-  --line:#39464f;
+  --panel2:#242d35;
+  --panel3:#0d1216;
+  --line:#3b4852;
   --lineSoft:rgba(255,255,255,.09);
-  --text:#f4f0e6;
-  --muted:#a7b2bb;
-  --dim:#74828c;
+  --text:#f4f0e7;
+  --muted:#a8b4bd;
   --accent:#f0c64c;
-  --accent2:#71b7d1;
   --danger:#d85f57;
-  --ok:#73bf82;
-  --tile:#efe4c6;
-  --tile2:#d8caab;
-  --tileBlue:#c7dfeb;
-  --tileGreen:#d1e7cb;
-  --tileAmber:#ead08e;
+  --tile:#eee1c0;
+  --tile2:#d8c9a8;
+  --visitor:#c7dfeb;
+  --solo:#d1e7cb;
+  --fuel:#ead08e;
   --ink:#101820;
-  --shadow:0 18px 40px rgba(0,0,0,.28);
+  --shadow:0 16px 34px rgba(0,0,0,.28);
 }
 
 *{box-sizing:border-box}
@@ -27,9 +24,7 @@ body{
   margin:0;
   overflow:hidden;
   color:var(--text);
-  background:
-    radial-gradient(circle at 48% 42%, rgba(240,198,76,.08), transparent 34%),
-    linear-gradient(180deg,#0e1216,#151b20);
+  background:linear-gradient(180deg,#0d1115,#151b20);
   font-family:Inter, "Segoe UI", Roboto, Arial, sans-serif;
   letter-spacing:0;
 }
@@ -40,12 +35,12 @@ button{touch-action:manipulation}
 .app{
   height:100vh;
   display:grid;
-  grid-template-rows:82px minmax(0,1fr) 66px;
+  grid-template-rows:78px minmax(0,1fr) 112px;
   gap:10px;
   padding:10px;
 }
 
-.topbar,.sidePanel,.bottomBar,.lane,.focusPanel,.awayPanel{
+.topbar,.trafficStack,.controlBar{
   border:1px solid var(--line);
   border-radius:9px;
   background:linear-gradient(180deg,var(--panel2),var(--panel));
@@ -54,7 +49,7 @@ button{touch-action:manipulation}
 
 .topbar{
   display:grid;
-  grid-template-columns:minmax(270px,340px) minmax(300px,1fr) minmax(280px,340px);
+  grid-template-columns:minmax(250px,330px) 1fr minmax(260px,320px);
   align-items:center;
   gap:14px;
   padding:10px 14px;
@@ -62,8 +57,8 @@ button{touch-action:manipulation}
 
 .brand{display:flex;align-items:center;gap:12px;min-width:0}
 .mark{
-  width:52px;
-  height:52px;
+  width:50px;
+  height:50px;
   display:grid;
   place-items:center;
   border-radius:8px;
@@ -72,10 +67,9 @@ button{touch-action:manipulation}
   font-family:Georgia,serif;
   font-weight:800;
   font-size:22px;
-  box-shadow:inset 0 -16px 0 rgba(0,0,0,.18);
 }
 
-.eyebrow,.summaryLabel,.clockBox span,.lane header span,.awayPanel span,.selectedHeader span,.modal header span{
+.eyebrow,.stackHeader span,.clocks span,.modal header span{
   color:var(--muted);
   font-size:11px;
   font-weight:850;
@@ -85,39 +79,38 @@ button{touch-action:manipulation}
 h1,h2,h3,p{margin:0}
 h1{
   margin-top:2px;
-  font-size:27px;
+  font-size:26px;
   line-height:1;
   font-weight:950;
   text-transform:uppercase;
 }
 
-.trafficSummary{
+.summary{
   min-width:0;
   height:100%;
   display:flex;
-  flex-direction:column;
-  justify-content:center;
-  gap:6px;
+  align-items:center;
   padding:0 18px;
   border-left:1px solid var(--lineSoft);
   border-right:1px solid var(--lineSoft);
 }
 
-.summaryLine{
-  white-space:nowrap;
+.summary span{
+  min-width:0;
   overflow:hidden;
   text-overflow:ellipsis;
-  font-size:19px;
-  font-weight:900;
+  white-space:nowrap;
+  font-size:22px;
+  font-weight:950;
 }
 
-.clockStack{
+.clocks{
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:8px;
 }
 
-.clockBox{
+.clocks div{
   min-width:0;
   padding:8px 10px;
   border:1px solid var(--lineSoft);
@@ -125,110 +118,65 @@ h1{
   background:var(--panel3);
 }
 
-.clockBox strong{
+.clocks b{
   display:block;
   margin-top:4px;
-  font-size:22px;
-  font-weight:950;
+  font-size:21px;
   font-variant-numeric:tabular-nums;
 }
 
-.workspace{
+.trafficView{
   min-height:0;
-  display:grid;
-  grid-template-columns:minmax(0,1fr) 330px;
-  gap:10px;
 }
 
-.boardSurface{
-  min-height:0;
+.trafficStack{
+  height:100%;
   display:grid;
-  grid-template-columns:1.04fr .86fr 1.04fr;
-  grid-template-rows:1fr .9fr 184px;
-  grid-template-areas:
-    "ground focus pattern"
-    "movement local inbound"
-    "outbound away away";
-  gap:10px;
-}
-
-.focusPanel{
-  grid-area:focus;
-  position:relative;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  min-width:0;
-  min-height:0;
+  grid-template-rows:78px minmax(0,1fr) auto;
   overflow:hidden;
 }
 
-.focusPanel::before{
-  content:"";
-  position:absolute;
-  width:78%;
-  aspect-ratio:1;
-  border:2px solid rgba(240,198,76,.54);
-  border-radius:50%;
+.stackHeader{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding:12px 14px;
+  border-bottom:1px solid var(--lineSoft);
 }
 
-.focusLabel{
-  position:relative;
-  z-index:1;
-  color:var(--muted);
-  font-weight:900;
+.stackHeader h2{
+  margin-top:3px;
+  font-size:28px;
+  line-height:1;
+  font-weight:950;
   text-transform:uppercase;
 }
 
-.focusNumber{
-  position:relative;
-  z-index:1;
-  margin-top:6px;
-  color:var(--accent);
-  font-size:72px;
-  line-height:.9;
-  font-weight:950;
-}
-
-.focusText{
-  position:relative;
-  z-index:1;
-  width:70%;
-  margin-top:8px;
-  color:var(--muted);
-  text-align:center;
-  font-size:13px;
-  font-weight:800;
-}
-
-.focusMetrics{
-  position:relative;
-  z-index:1;
-  width:92%;
-  margin-top:18px;
+.stackMetrics{
   display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:6px;
+  grid-template-columns:repeat(4,90px);
+  gap:8px;
 }
 
-.focusMetrics div{
-  padding:8px 4px;
+.stackMetrics div{
+  height:50px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
   border:1px solid var(--lineSoft);
   border-radius:8px;
   background:var(--panel3);
-  text-align:center;
 }
 
-.focusMetrics strong{
-  display:block;
+.stackMetrics b{
   color:var(--accent);
-  font-size:22px;
+  font-size:23px;
   line-height:1;
 }
 
-.focusMetrics span{
-  display:block;
+.stackMetrics small{
   margin-top:4px;
   color:var(--muted);
   font-size:10px;
@@ -236,58 +184,10 @@ h1{
   text-transform:uppercase;
 }
 
-.lane{
-  min-width:0;
+.aircraftList{
   min-height:0;
   display:flex;
   flex-direction:column;
-  overflow:hidden;
-}
-
-.laneGround{grid-area:ground}
-.laneMovement{grid-area:movement}
-.lanePattern{grid-area:pattern}
-.laneLocal{grid-area:local}
-.laneInbound{grid-area:inbound}
-.laneOutbound{grid-area:outbound}
-
-.lane header{
-  min-height:58px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:10px;
-  padding:10px 12px;
-  border-bottom:1px solid var(--lineSoft);
-  background:rgba(255,255,255,.035);
-}
-
-.lane h2,.awayPanel h2{
-  margin-top:3px;
-  font-size:23px;
-  line-height:1;
-  font-weight:950;
-  text-transform:uppercase;
-}
-
-.lane header b{
-  min-width:40px;
-  height:38px;
-  display:grid;
-  place-items:center;
-  border-radius:8px;
-  background:var(--panel3);
-  color:var(--accent);
-  font-size:23px;
-  font-weight:950;
-}
-
-.aircraftList{
-  flex:1;
-  min-height:0;
-  display:grid;
-  grid-template-columns:1fr;
-  align-content:start;
   gap:8px;
   padding:10px;
   overflow:auto;
@@ -295,85 +195,66 @@ h1{
 }
 
 .aircraftList:empty::after{
-  content:"No aircraft";
-  min-height:58px;
+  content:"No active aircraft";
+  min-height:100%;
   display:grid;
   place-items:center;
-  border:1px dashed rgba(255,255,255,.16);
-  border-radius:8px;
   color:rgba(255,255,255,.34);
-  font-size:13px;
-  font-weight:850;
+  font-size:18px;
+  font-weight:900;
   text-transform:uppercase;
 }
 
-.aircraftTile{
-  min-height:104px;
-  position:relative;
+.aircraftRow{
+  min-height:88px;
+  display:grid;
+  grid-template-columns:9px minmax(180px,1.1fr) minmax(130px,.7fr) minmax(130px,.7fr) minmax(160px,1fr) 96px;
   color:var(--ink);
   border:1px solid rgba(0,0,0,.28);
   border-radius:8px;
   overflow:hidden;
   background:linear-gradient(180deg,var(--tile),var(--tile2));
-  box-shadow:0 9px 16px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.52);
+  box-shadow:0 8px 14px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.50);
   cursor:pointer;
 }
 
-.aircraftTile.visitor{background:linear-gradient(180deg,var(--tileBlue),#b8d3de)}
-.aircraftTile.solo{background:linear-gradient(180deg,var(--tileGreen),#bed9b8)}
-.aircraftTile.fuel{background:linear-gradient(180deg,var(--tileAmber),#d9b96c)}
-.aircraftTile.selected{
+.aircraftRow.visitor{background:linear-gradient(180deg,var(--visitor),#b8d3de)}
+.aircraftRow.solo{background:linear-gradient(180deg,var(--solo),#bed9b8)}
+.aircraftRow.fuel{background:linear-gradient(180deg,var(--fuel),#d9b96c)}
+.aircraftRow.selected{
   outline:4px solid var(--accent);
   outline-offset:-4px;
   box-shadow:0 0 0 3px rgba(240,198,76,.24),0 12px 22px rgba(0,0,0,.34);
 }
 
-.positionStripe{
-  position:absolute;
-  inset:0 auto 0 0;
-  width:9px;
-  background:var(--accent);
-}
+.stripe{background:var(--accent)}
+.aircraftRow[data-position="movement"] .stripe{background:#6bb7d6}
+.aircraftRow[data-position="pattern"] .stripe{background:#d88a35}
+.aircraftRow[data-position="local"] .stripe{background:#79b96f}
+.aircraftRow[data-position="inbound"] .stripe{background:#66bd84}
+.aircraftRow[data-position="outbound"] .stripe{background:#7b8ed2}
+.aircraftRow[data-position="away"] .stripe{background:#8c969e}
 
-.aircraftTile[data-position="movement"] .positionStripe{background:#6bb7d6}
-.aircraftTile[data-position="pattern"] .positionStripe{background:#d88a35}
-.aircraftTile[data-position="local"] .positionStripe{background:#79b96f}
-.aircraftTile[data-position="inbound"] .positionStripe{background:#66bd84}
-.aircraftTile[data-position="outbound"] .positionStripe{background:#7b8ed2}
-.aircraftTile[data-position="away"] .positionStripe{background:#8c969e}
-
-.tileGrid{
-  min-height:104px;
-  padding-left:9px;
-  display:grid;
-  grid-template-columns:minmax(0,1fr) 78px;
-  grid-template-rows:auto auto;
-}
-
-.tileMain,.tileState{
+.rowCell{
   min-width:0;
-  padding:10px 11px;
-  border-right:1px solid rgba(0,0,0,.16);
-  border-bottom:1px solid rgba(0,0,0,.13);
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  padding:10px 12px;
+  border-right:1px solid rgba(0,0,0,.15);
 }
 
-.tileState{
-  grid-column:2;
-  border-right:0;
-  text-align:center;
-  background:rgba(255,255,255,.20);
-}
-
-.tileLabel{
-  color:rgba(0,0,0,.56);
-  font-size:9px;
+.rowCell:last-child{border-right:0}
+.rowLabel{
+  color:rgba(0,0,0,.54);
+  font-size:10px;
   font-weight:950;
   text-transform:uppercase;
 }
 
-.tileCallsign{
+.callsign{
   margin-top:5px;
-  font-size:25px;
+  font-size:34px;
   line-height:.95;
   font-weight:950;
   white-space:nowrap;
@@ -381,9 +262,9 @@ h1{
   text-overflow:ellipsis;
 }
 
-.tileValue{
+.primaryText{
   margin-top:5px;
-  font-size:17px;
+  font-size:19px;
   line-height:1;
   font-weight:950;
   white-space:nowrap;
@@ -391,34 +272,38 @@ h1{
   text-overflow:ellipsis;
 }
 
-.tileSub{
-  margin-top:7px;
-  color:rgba(0,0,0,.62);
+.secondaryText{
+  margin-top:5px;
+  color:rgba(0,0,0,.66);
   font-size:13px;
-  font-weight:900;
+  font-weight:850;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
 }
 
-.tileNote{
-  grid-column:1 / -1;
-  min-width:0;
-  display:flex;
+.stateCell{
   align-items:center;
+  text-align:center;
+  background:rgba(255,255,255,.19);
+}
+
+.stateText{
+  margin-top:5px;
+  font-size:25px;
+  line-height:1;
+  font-weight:950;
+}
+
+.tags{
+  display:flex;
   gap:5px;
-  padding:7px 10px;
-  background:rgba(255,255,255,.16);
-  color:rgba(0,0,0,.76);
-  font-size:13px;
-  font-weight:850;
-  white-space:nowrap;
-  overflow:hidden;
+  flex-wrap:wrap;
+  margin-top:6px;
 }
 
 .tag{
-  flex:0 0 auto;
-  min-height:21px;
+  min-height:22px;
   display:inline-flex;
   align-items:center;
   padding:3px 7px;
@@ -435,150 +320,101 @@ h1{
 .tag.fuel{background:#f0c64c}
 .tag.cfi{background:#c6d3ef}
 
-.noteText{
-  min-width:0;
-  overflow:hidden;
-  text-overflow:ellipsis;
+.awaySummary{
+  border-top:1px solid var(--lineSoft);
+  background:rgba(255,255,255,.025);
 }
 
-.awayPanel{
-  grid-area:away;
-  min-width:0;
-  min-height:0;
-  display:grid;
-  grid-template-columns:220px 112px 1fr;
+.awaySummary > button{
+  width:100%;
+  height:52px;
+  display:flex;
   align-items:center;
-  gap:12px;
-  padding:10px 12px;
-  overflow:hidden;
+  justify-content:space-between;
+  border:0;
+  border-radius:0;
+  padding:0 16px;
+  background:transparent;
+  color:var(--text);
 }
 
-.laneOutbound .aircraftTile,
-.laneOutbound .tileGrid{
-  min-height:92px;
-}
-
-.awayPanel strong{
-  justify-self:end;
-  color:var(--accent);
-  font-size:23px;
+.awaySummary button span{
+  color:var(--muted);
+  font-size:12px;
+  font-weight:900;
   text-transform:uppercase;
 }
 
-.awayPanel button{
-  height:42px;
+.awaySummary button b{
+  color:var(--accent);
+  font-size:22px;
+  text-transform:uppercase;
 }
 
 .awayList{
-  grid-column:1 / -1;
-  display:flex;
-  gap:8px;
-  overflow:auto;
-  padding:0;
+  max-height:188px;
+  border-top:1px solid var(--lineSoft);
 }
 
 .awayList.collapsed{display:none}
-.awayList .aircraftTile{min-width:190px;min-height:58px}
-.awayList .tileGrid{min-height:58px;grid-template-columns:1fr 68px;grid-template-rows:1fr}
-.awayList .tileNote{display:none}
-.awayList .tileCallsign{font-size:20px}
-.awayList .tileState{grid-column:2}
-.awayList .tileValue{font-size:15px}
+.awayList .aircraftRow{min-height:70px}
 
-.sidePanel{
-  min-height:0;
+.controlBar{
+  display:grid;
+  grid-template-columns:158px minmax(220px,320px) minmax(0,1fr) 350px;
+  align-items:center;
+  gap:10px;
+  padding:10px;
+}
+
+.selectedBlock{
+  min-width:0;
+  height:100%;
+  min-height:70px;
   display:flex;
   flex-direction:column;
-  padding:12px;
-  gap:12px;
-}
-
-.selectedHeader{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:8px;
-}
-
-.selectedCard{
-  min-height:118px;
-  padding:14px;
+  justify-content:center;
+  padding:10px 12px;
   border:1px solid var(--lineSoft);
-  border-radius:9px;
+  border-radius:8px;
   background:var(--panel3);
 }
 
-.selectedCard strong{
-  display:block;
-  font-size:22px;
+.selectedBlock strong{
+  font-size:18px;
   font-weight:950;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
 }
 
-.selectedCard p{
-  margin-top:8px;
+.selectedBlock span{
+  margin-top:5px;
   color:var(--muted);
-  font-size:14px;
-  line-height:1.35;
+  font-size:13px;
+  font-weight:800;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
 
-.selectedCard.empty strong{font-size:18px;color:var(--muted)}
-
-.selectedDetail{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:7px;
-  margin-top:12px;
-}
-
-.selectedDetail div{
+.quickActions{
   min-width:0;
-  padding:8px;
-  border:1px solid var(--lineSoft);
-  border-radius:7px;
-  background:rgba(255,255,255,.035);
-}
-
-.selectedDetail span{
-  display:block;
-  color:var(--muted);
-  font-size:10px;
-  font-weight:850;
-  text-transform:uppercase;
-}
-
-.selectedDetail b{
-  display:block;
-  margin-top:3px;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-
-.actionBlock{
-  border-top:1px solid var(--lineSoft);
-  padding-top:12px;
-}
-
-.actionBlock h3{
-  margin-bottom:8px;
-  color:var(--muted);
-  font-size:12px;
-  font-weight:950;
-  text-transform:uppercase;
-}
-
-.actionGrid{
   display:grid;
-  grid-template-columns:1fr 1fr;
+  grid-template-columns:repeat(5,minmax(76px,1fr));
   gap:7px;
 }
 
-.toolGrid{
+.quickActions button{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  font-size:12px;
+}
+
+.utilityMenu{
   display:grid;
-  grid-template-columns:1fr 1fr;
+  grid-template-columns:repeat(4,1fr);
   gap:7px;
 }
 
@@ -586,7 +422,7 @@ button,.importButton{
   min-height:42px;
   border:1px solid var(--lineSoft);
   border-radius:8px;
-  padding:0 13px;
+  padding:0 12px;
   color:var(--text);
   background:linear-gradient(180deg,#2a343d,#151b20);
   font-weight:900;
@@ -597,6 +433,7 @@ button,.importButton{
 button:hover,.importButton:hover{filter:brightness(1.12)}
 button:disabled{opacity:.38;cursor:not-allowed;filter:saturate(.45)}
 .primary{
+  min-height:70px;
   color:#15120a;
   background:linear-gradient(180deg,#ffdb69,#d9ad38);
   border-color:#ffe585;
@@ -609,15 +446,6 @@ button:disabled{opacity:.38;cursor:not-allowed;filter:saturate(.45)}
   background:#221a1b;
   color:#ffd6d4;
 }
-
-.bottomBar{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  padding:10px;
-}
-
-.bottomBar .primary{min-width:180px}
 .importButton{
   display:inline-flex;
   align-items:center;
@@ -701,8 +529,6 @@ button:disabled{opacity:.38;cursor:not-allowed;filter:saturate(.45)}
   gap:12px;
 }
 
-.formGrid .wide{grid-column:auto}
-
 label{
   min-width:0;
   display:flex;
@@ -775,44 +601,43 @@ input:focus,select:focus,textarea:focus{
 .spacer{flex:1}
 
 @media(max-width:1180px){
-  .app{grid-template-rows:78px minmax(0,1fr) 66px}
-  .topbar{grid-template-columns:250px 1fr 280px}
+  .app{grid-template-rows:74px minmax(0,1fr) 120px}
+  .topbar{grid-template-columns:240px 1fr 260px}
   h1{font-size:23px}
-  .summaryLine{font-size:16px}
-  .clockBox strong{font-size:18px}
-  .workspace{grid-template-columns:minmax(0,1fr) 300px}
-  .boardSurface{grid-template-columns:1fr .82fr 1fr}
-  .lane h2,.awayPanel h2{font-size:20px}
-  .tileCallsign{font-size:26px}
-  .tileValue{font-size:15px}
-  .aircraftTile{min-height:94px}
-  .tileGrid{min-height:94px}
-  .actionGrid{grid-template-columns:1fr}
+  .summary span{font-size:18px}
+  .clocks b{font-size:18px}
+  .stackMetrics{grid-template-columns:repeat(4,76px)}
+  .aircraftRow{
+    grid-template-columns:9px minmax(160px,1.05fr) minmax(110px,.62fr) minmax(110px,.62fr) minmax(130px,.8fr) 82px;
+  }
+  .callsign{font-size:29px}
+  .primaryText{font-size:17px}
+  .stateText{font-size:21px}
+  .controlBar{grid-template-columns:140px 250px minmax(0,1fr) 300px}
+  .quickActions{grid-template-columns:repeat(5,minmax(64px,1fr))}
+  .quickActions button,.utilityMenu button,.importButton{font-size:12px;padding:0 8px}
 }
 
 @media(max-width:820px){
   body{overflow:auto}
-  .app{height:auto;min-height:100vh;display:block}
-  .topbar{position:sticky;top:10px;z-index:50;grid-template-columns:1fr;gap:10px;height:auto}
-  .trafficSummary{border:0;padding:0}
-  .workspace{display:block}
-  .boardSurface{
-    margin-top:10px;
-    display:grid;
-    grid-template-columns:1fr;
-    grid-template-areas:
-      "focus"
-      "ground"
-      "movement"
-      "pattern"
-      "local"
-      "inbound"
-      "outbound"
-      "away";
+  .app{height:auto;min-height:100vh;display:block;padding:8px}
+  .topbar{position:sticky;top:8px;z-index:50;grid-template-columns:1fr;gap:10px;height:auto}
+  .summary{border:0;padding:0}
+  .trafficView{margin-top:8px}
+  .trafficStack{height:auto;min-height:70vh}
+  .stackHeader{align-items:flex-start;flex-direction:column}
+  .stackMetrics{width:100%;grid-template-columns:repeat(4,1fr)}
+  .aircraftRow{
+    min-height:112px;
+    grid-template-columns:9px minmax(0,1fr) 86px;
+    grid-template-rows:auto auto;
   }
-  .focusPanel,.lane{min-height:320px}
-  .sidePanel{margin-top:10px}
-  .bottomBar{position:sticky;bottom:10px;z-index:55;flex-wrap:wrap;margin-top:10px}
+  .rowCell.intentCell,.rowCell.noteCell{grid-column:2 / 4}
+  .rowCell.stateCell{grid-column:3;grid-row:1}
+  .controlBar{position:sticky;bottom:8px;z-index:55;margin-top:8px;grid-template-columns:1fr}
+  .primary{min-height:52px}
+  .quickActions{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .utilityMenu{grid-template-columns:repeat(4,1fr)}
   .formGrid,.toggleRow{grid-template-columns:1fr}
   .modalBackdrop{align-items:flex-end;padding:8px}
   .modal{width:100%;max-height:96vh}
