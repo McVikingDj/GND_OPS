@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>OSM AA Ground OPS</title>
+  <title>OSM AA Ground OPS Watchlist</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -13,12 +13,12 @@
         <div class="mark">OSM</div>
         <div>
           <div class="eyebrow">OSM Aviation Academy</div>
-          <h1>Ground OPS</h1>
+          <h1>Ground OPS Watchlist</h1>
         </div>
       </div>
 
       <div class="summary">
-        <span id="summaryLine">Active 0 · Airborne 0 · Away 0</span>
+        <span id="summaryLine">Attention 0 · Active 0 · Away 0</span>
       </div>
 
       <div class="clocks">
@@ -27,30 +27,35 @@
       </div>
     </header>
 
-    <main class="trafficView">
-      <section class="trafficStack" aria-label="Active aircraft">
-        <header class="stackHeader">
+    <main class="watchlist">
+      <section class="panel attentionPanel">
+        <header>
           <div>
-            <span>ENGK active traffic</span>
-            <h2>Aircraft</h2>
+            <span>Needs operator awareness</span>
+            <h2>Attention</h2>
           </div>
-          <div class="stackMetrics">
-            <div><b id="localTrafficCount">0</b><small>Active</small></div>
-            <div><b id="metricGround">0</b><small>Ground</small></div>
-            <div><b id="metricAirborne">0</b><small>Airborne</small></div>
-            <div><b id="metricInbound">0</b><small>Inbound</small></div>
-          </div>
+          <b id="attentionCount">0</b>
         </header>
+        <div class="aircraftList" id="attentionList"></div>
+      </section>
 
+      <section class="panel activePanel">
+        <header>
+          <div>
+            <span>Normal local picture</span>
+            <h2>Active</h2>
+          </div>
+          <b id="activeCount">0</b>
+        </header>
         <div class="aircraftList" id="activeList"></div>
+      </section>
 
-        <section class="awaySummary">
-          <button id="toggleAwayBtn" type="button">
-            <span>Away / changed frequency</span>
-            <b><span id="metricAway">0</span> aircraft</b>
-          </button>
-          <div class="aircraftList awayList collapsed" id="listAway"></div>
-        </section>
+      <section class="panel awayPanel">
+        <button id="toggleAwayBtn" type="button">
+          <span>Away / changed frequency</span>
+          <b><span id="metricAway">0</span> aircraft</b>
+        </button>
+        <div class="aircraftList awayList collapsed" id="listAway"></div>
       </section>
     </main>
 
@@ -70,7 +75,7 @@
         <button data-action-position="inbound" disabled>Inbound</button>
         <button data-action-position="outbound" disabled>Out</button>
         <button data-action-position="away" disabled>Away</button>
-        <button id="editAircraftBtn" type="button" disabled>Edit</button>
+        <button id="editAircraftBtn" type="button" disabled>Note/Edit</button>
         <button id="closeAircraftBtn" type="button" class="danger" disabled>Close</button>
         <button id="clearSelectionBtn" type="button" disabled>Clear</button>
       </div>

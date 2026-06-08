@@ -22,17 +22,18 @@
     outbound: "OUT",
     away: "AWAY"
   };
+  const WATCH_MS = 8 * 60 * 1000;
+  const URGENT_MS = 16 * 60 * 1000;
 
   let aircraft = [];
   let selectedId = null;
 
   const els = {
     summaryLine: document.getElementById("summaryLine"),
-    localTrafficCount: document.getElementById("localTrafficCount"),
-    metricGround: document.getElementById("metricGround"),
-    metricAirborne: document.getElementById("metricAirborne"),
-    metricInbound: document.getElementById("metricInbound"),
     metricAway: document.getElementById("metricAway"),
+    attentionCount: document.getElementById("attentionCount"),
+    activeCount: document.getElementById("activeCount"),
+    attentionList: document.getElementById("attentionList"),
     activeList: document.getElementById("activeList"),
     clockLocal: document.getElementById("clockLocal"),
     clockUtc: document.getElementById("clockUtc"),
@@ -106,6 +107,24 @@
     return null;
   }
 
+  function minutesSinceUpdate(item) {
+    return Math.max(0, Math.floor((Date.now() - (item.updatedAt || item.createdAt || Date.now())) / 60000));
+  }
+
+  function classifyAttention(item) {
+    if (item.position === "away") return { level: "away", reason: "" };
+    const staleMs = Date.now() - (item.updatedAt || item.createdAt || Date.now());
+    const staleMin = minutesSinceUpdate(item);
+
+    if (staleMs >= URGENT_MS) return { level: "urgent", reason: `${staleMin} min` };
+    if (item.position === "outbound" && staleMs >= WATCH_MS) return { level: "watch", reason: "Move away?" };
+    if (staleMs >= WATCH_MS) return { level: "watch", reason: `${staleMin} min` };
+    if (item.position === "inbound") return { level: "watch", reason: "Inbound" };
+    if (item.flags.solo) return { level: "watch", reason: "Solo" };
+    if (item.flags.fuel) return { level: "watch", reason: "Fuel" };
+    return { level: "normal", reason: "" };
+  }
+
   function save() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(aircraft));
     localStorage.setItem(META_KEY, JSON.stringify({
@@ -175,14 +194,20 @@
   function buildTags(item) {
     const tags = [];
     const airMs = getAirMs(item);
+    const attention = classifyAttention(item);
     if (item.flags.fuel) tags.push('<span class="tag fuel">Fuel</span>');
     if (item.flags.solo) tags.push('<span class="tag solo">Solo</span>');
     if (item.flags.instructor) tags.push('<span class="tag cfi">CFI</span>');
     if (airMs != null && isAirborne(item.position)) tags.push(`<span class="tag air">Air ${formatDuration(airMs)}</span>`);
+    if (attention.level === "watch" && !["Fuel", "Solo"].includes(attention.reason)) {
+      tags.push(`<span class="tag watch">${escapeHtml(attention.reason)}</span>`);
+    }
+    if (attention.level === "urgent") tags.push(`<span class="tag urgent">${escapeHtml(attention.reason)}</span>`);
     return tags.join("");
   }
 
   function priority(item) {
+    const attention = classifyAttention(item);
     const order = {
       inbound: 0,
       pattern: 1,
@@ -193,6 +218,8 @@
       away: 9
     };
     let score = order[item.position] ?? 8;
+    if (attention.level === "urgent") score -= 20;
+    if (attention.level === "watch") score -= 10;
     if (item.flags.fuel) score -= 0.25;
     if (item.flags.solo) score -= 0.15;
     return score;
@@ -207,12 +234,15 @@
   }
 
   function makeAircraftTile(item) {
+    const attention = classifyAttention(item);
     const row = document.createElement("article");
     row.className = [
       "aircraftRow",
       item.operatorType === "Visitor" ? "visitor" : "",
       item.flags.solo ? "solo" : "",
       item.flags.fuel ? "fuel" : "",
+      attention.level === "watch" ? "watch" : "",
+      attention.level === "urgent" ? "urgent" : "",
       item.id === selectedId ? "selected" : ""
     ].filter(Boolean).join(" ");
     row.dataset.id = item.id;
@@ -232,7 +262,7 @@
       <div class="rowCell">
         <div class="rowLabel">Position</div>
         <div class="primaryText">${escapeHtml(POSITION_LABELS[item.position])}</div>
-        <div class="secondaryText">${item.operatorType === "Visitor" ? "Visitor" : "OSM"}</div>
+        <div class="secondaryText">Updated ${minutesSinceUpdate(item)} min ago</div>
       </div>
       <div class="rowCell noteCell">
         <div class="rowLabel">OPS note</div>
@@ -252,9 +282,18 @@
   }
 
   function renderLists() {
+    els.attentionList.innerHTML = "";
     els.activeList.innerHTML = "";
     els.listAway.innerHTML = "";
-    for (const item of sortedAircraft(aircraft.filter(entry => entry.position !== "away"))) {
+
+    const localAircraft = aircraft.filter(entry => entry.position !== "away");
+    const attentionAircraft = localAircraft.filter(item => classifyAttention(item).level !== "normal");
+    const activeAircraft = localAircraft.filter(item => classifyAttention(item).level === "normal");
+
+    for (const item of sortedAircraft(attentionAircraft)) {
+      els.attentionList.appendChild(makeAircraftTile(item));
+    }
+    for (const item of sortedAircraft(activeAircraft)) {
       els.activeList.appendChild(makeAircraftTile(item));
     }
     for (const item of sortedAircraft(aircraft.filter(entry => entry.position === "away"))) {
@@ -266,13 +305,13 @@
     const count = counts();
     const active = localCount(count);
     const airborne = count.pattern + count.local + count.inbound + count.outbound;
+    const attention = aircraft.filter(item => item.position !== "away" && classifyAttention(item).level !== "normal").length;
+    const normal = aircraft.filter(item => item.position !== "away" && classifyAttention(item).level === "normal").length;
 
-    els.localTrafficCount.textContent = String(active);
-    els.metricGround.textContent = String(count.ground + count.movement);
-    els.metricAirborne.textContent = String(airborne);
-    els.metricInbound.textContent = String(count.inbound);
     els.metricAway.textContent = String(count.away);
-    els.summaryLine.textContent = `Active ${active} · Ground ${count.ground + count.movement} · Airborne ${airborne} · Away ${count.away}`;
+    els.attentionCount.textContent = String(attention);
+    els.activeCount.textContent = String(normal);
+    els.summaryLine.textContent = `Attention ${attention} · Active ${normal} · Airborne ${airborne} · Away ${count.away}`;
   }
 
   function renderSelected() {
@@ -296,7 +335,7 @@
     els.selectedCard.className = "selectedBlock active";
     els.selectedCard.innerHTML = `
       <strong>${escapeHtml(item.callsign)} · ${escapeHtml(POSITION_SHORT[item.position])}</strong>
-      <span>${escapeHtml(item.type || "-")} ${escapeHtml(item.registration || "")} · ${escapeHtml(item.intention)}${airMs == null ? "" : ` · AIR ${formatDuration(airMs)}`}</span>
+      <span>${escapeHtml(item.type || "-")} ${escapeHtml(item.registration || "")} · ${escapeHtml(item.intention)} · Updated ${minutesSinceUpdate(item)} min${airMs == null ? "" : ` · AIR ${formatDuration(airMs)}`}</span>
     `;
   }
 
@@ -425,19 +464,19 @@
   function loadDemo() {
     const now = Date.now();
     aircraft = [
-      demoAircraft("SCQ23A", "LN-AZA", "C172", "ground", "Fuel", "OSM", { fuel: true }, "Fuel before next sortie"),
-      demoAircraft("SCQ417", "SE-MIN", "DA42", "movement", "Departure", "OSM", {}, "Taxi RWY 05"),
-      demoAircraft("SCQ8K", "LN-AZC", "C172", "pattern", "TGL", "OSM", { solo: true }, "Solo circuit", now - 7 * 60000),
-      demoAircraft("SCQ51B", "LN-AZD", "C172", "local", "Local training", "OSM", { instructor: true }, "Training area west", now - 18 * 60000),
-      demoAircraft("LN-ABC", "LN-ABC", "PA28", "inbound", "Arrival", "Visitor", {}, "Inbound from reporting point", now - 41 * 60000),
-      demoAircraft("SCQ92C", "SE-MEJ", "DA42", "outbound", "Departure", "OSM", {}, "Leaving local soon", now - 4 * 60000),
-      demoAircraft("SCQ77", "LN-AZE", "C172", "away", "Local training", "OSM", {}, "Changed frequency", now - 31 * 60000)
+      demoAircraft("SCQ23A", "LN-AZA", "C172", "ground", "Fuel", "OSM", { fuel: true }, "Fuel before next sortie", null, now - 5 * 60000),
+      demoAircraft("SCQ417", "SE-MIN", "DA42", "movement", "Departure", "OSM", {}, "Taxi RWY 05", null, now - 3 * 60000),
+      demoAircraft("SCQ8K", "LN-AZC", "C172", "pattern", "TGL", "OSM", { solo: true }, "Solo circuit", now - 7 * 60000, now - 4 * 60000),
+      demoAircraft("SCQ51B", "LN-AZD", "C172", "local", "Local training", "OSM", { instructor: true }, "Training area west", now - 18 * 60000, now - 18 * 60000),
+      demoAircraft("LN-ABC", "LN-ABC", "PA28", "inbound", "Arrival", "Visitor", {}, "Inbound from reporting point", now - 41 * 60000, now - 6 * 60000),
+      demoAircraft("SCQ92C", "SE-MEJ", "DA42", "outbound", "Departure", "OSM", {}, "Leaving local soon", now - 14 * 60000, now - 12 * 60000),
+      demoAircraft("SCQ77", "LN-AZE", "C172", "away", "Local training", "OSM", {}, "Changed frequency", now - 31 * 60000, now - 21 * 60000)
     ];
     selectedId = aircraft[0].id;
     render();
   }
 
-  function demoAircraft(callsign, registration, type, position, intention, operatorType, flags, note, airborneStartMs = null) {
+  function demoAircraft(callsign, registration, type, position, intention, operatorType, flags, note, airborneStartMs = null, updatedAt = Date.now()) {
     return {
       id: nowId(),
       callsign,
@@ -455,7 +494,7 @@
       airborneStartMs,
       lastAirMs: null,
       createdAt: Date.now(),
-      updatedAt: Date.now()
+      updatedAt
     };
   }
 
