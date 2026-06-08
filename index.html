@@ -3,139 +3,145 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gullknapp OPS Flight Strips</title>
+  <title>Gullknapp OPS Local Traffic</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="appShell">
+  <div class="appShell" data-theme="ops">
     <header class="topbar">
       <div class="brand">
         <img class="brandLogo" src="osmaa_logotype_vertical.png" alt="OSM Aviation Academy" />
         <div>
-          <div class="eyebrow">Gullknapp Ground OPS</div>
-          <div class="title">Flight Strip Board</div>
-          <div class="version">Version 0.9.0 tablet concept</div>
+          <div class="eyebrow">GULLKNAPP OPS</div>
+          <div class="title">LOCAL TRAFFIC</div>
         </div>
       </div>
 
-      <div class="summaryWrap">
-        <div class="summaryLabel">Live traffic picture</div>
-        <div class="summary" id="summary">GND: 0 | DEP: 0 | ARR: 0 | PATTERN: 0 | TRAIN: 0 | X-C: 0 | ENCN: 0 | TOTAL: 0</div>
+      <div class="trafficHeader">
+        <div class="trafficLabel">GULLKNAPP LOCAL</div>
+        <div class="summary" id="summary">LOCAL 0 | GND 0 | PATTERN 0 | IN 0 | OUT 0 | AWAY 0</div>
       </div>
 
-      <div class="clocks">
-        <div class="clock">
-          <div class="clock-label">Local</div>
-          <div class="clock-value" id="clockLocal">--:--:--</div>
-        </div>
-        <div class="clock">
-          <div class="clock-label">UTC</div>
-          <div class="clock-value" id="clockUtc">--:--:--</div>
+      <div class="topTools">
+        <label class="themePicker">
+          <span>Theme</span>
+          <select id="themeSelect">
+            <option value="ops">OPS Dark</option>
+            <option value="paper">Paper Light</option>
+            <option value="tower">Tower Blue</option>
+            <option value="night">Night Amber</option>
+          </select>
+        </label>
+        <div class="clocks">
+          <div class="clock"><div class="clock-label">LOCAL</div><div class="clock-value" id="clockLocal">--:--:--</div></div>
+          <div class="clock"><div class="clock-label">UTC</div><div class="clock-value" id="clockUtc">--:--:--</div></div>
         </div>
       </div>
     </header>
 
-    <main class="board" id="board" aria-label="Flight strip board">
-      <section class="column columnWide" data-column="groundActive">
-        <header class="column-header">
-          <div>
-            <div class="column-kicker">Ramp / taxi / fuel</div>
-            <h2>Ground Active</h2>
-          </div>
-          <div class="column-count" data-count="groundActive">0</div>
-        </header>
-        <div class="strip-container" aria-label="Ground Active strips"></div>
+    <main class="attentionSurface" id="board" aria-label="Gullknapp local traffic attention surface">
+      <section class="localCore" aria-label="Local traffic overview">
+        <div class="coreRing">
+          <div class="coreLabel">GULLKNAPP LOCAL</div>
+          <div class="coreCount" id="localCount">0</div>
+          <div class="coreSub">aircraft requiring local awareness</div>
+        </div>
+        <div class="coreMetrics">
+          <div><span data-count="groundActive">0</span><small>Ground</small></div>
+          <div><span data-count="pattern">0</span><small>Pattern</small></div>
+          <div><span data-count="arrival">0</span><small>Inbound</small></div>
+          <div><span data-count="departure">0</span><small>Leaving</small></div>
+        </div>
       </section>
 
-      <section class="column" data-column="departure">
-        <header class="column-header">
+      <section class="zone zoneGround" data-column="groundActive">
+        <header class="zoneHeader">
           <div>
-            <div class="column-kicker">Outbound</div>
-            <h2>Departure</h2>
+            <div class="zoneKicker">Ramp / fuel / holding</div>
+            <h2>GROUND</h2>
           </div>
-          <div class="column-count" data-count="departure">0</div>
+          <div class="zoneCount" data-count="groundActive">0</div>
         </header>
-        <div class="strip-container" aria-label="Departure strips"></div>
+        <div class="strip-container trafficTiles" aria-label="Ground aircraft"></div>
       </section>
 
-      <section class="column" data-column="arrival">
-        <header class="column-header">
+      <section class="zone zoneTaxi" data-column="training">
+        <header class="zoneHeader">
           <div>
-            <div class="column-kicker">Inbound</div>
-            <h2>Arrival</h2>
+            <div class="zoneKicker">Preparing / local training</div>
+            <h2>TAXI / READY</h2>
           </div>
-          <div class="column-count" data-count="arrival">0</div>
+          <div class="zoneCount" data-count="training">0</div>
         </header>
-        <div class="strip-container" aria-label="Arrival strips"></div>
+        <div class="strip-container trafficTiles compactTiles" aria-label="Taxi and ready aircraft"></div>
       </section>
 
-      <section class="column" data-column="pattern">
-        <header class="column-header">
+      <section class="zone zonePattern" data-column="pattern">
+        <header class="zoneHeader">
           <div>
-            <div class="column-kicker">Circuit load</div>
-            <h2>Pattern</h2>
+            <div class="zoneKicker">Circuit / touch and go</div>
+            <h2>PATTERN</h2>
           </div>
-          <div class="column-count" data-count="pattern">0</div>
+          <div class="zoneCount" data-count="pattern">0</div>
         </header>
-        <div class="strip-container" aria-label="Pattern strips"></div>
+        <div class="strip-container trafficTiles" aria-label="Pattern aircraft"></div>
       </section>
 
-      <section class="column" data-column="training">
-        <header class="column-header">
+      <section class="zone zoneInbound" data-column="arrival">
+        <header class="zoneHeader">
           <div>
-            <div class="column-kicker">Local area</div>
-            <h2>Training</h2>
+            <div class="zoneKicker">Approaching local area</div>
+            <h2>INBOUND SOON</h2>
           </div>
-          <div class="column-count" data-count="training">0</div>
+          <div class="zoneCount" data-count="arrival">0</div>
         </header>
-        <div class="strip-container" aria-label="Training strips"></div>
+        <div class="strip-container trafficTiles compactTiles" aria-label="Inbound aircraft"></div>
       </section>
 
-      <section class="column" data-column="crossCountry">
-        <header class="column-header">
+      <section class="zone zoneLeaving" data-column="departure">
+        <header class="zoneHeader">
           <div>
-            <div class="column-kicker">Navigation</div>
-            <h2>X-Country</h2>
+            <div class="zoneKicker">Before reporting point</div>
+            <h2>LEAVING LOCAL</h2>
           </div>
-          <div class="column-count" data-count="crossCountry">0</div>
+          <div class="zoneCount" data-count="departure">0</div>
         </header>
-        <div class="strip-container" aria-label="Cross Country strips"></div>
+        <div class="strip-container trafficTiles compactTiles" aria-label="Outbound local aircraft"></div>
       </section>
 
-      <section class="column" data-column="encn">
-        <header class="column-header">
-          <div>
-            <div class="column-kicker">Enroute / standby</div>
-            <h2>ENCN</h2>
-          </div>
-          <div class="column-count" data-count="encn">0</div>
-        </header>
-        <div class="strip-container" aria-label="ENCN strips"></div>
+      <section class="awayPanel" data-column="encn">
+        <div>
+          <div class="awayLabel">AWAY / CONTROLLED AIRSPACE</div>
+          <div class="awayCount"><span data-count="encn">0</span> aircraft</div>
+        </div>
+        <button class="awayToggle" id="awayToggle" type="button">Show</button>
+        <div class="strip-container awayList hidden" id="awayList" aria-label="Away aircraft"></div>
       </section>
     </main>
 
-    <section class="controls" aria-label="Board controls">
+    <section class="actionDock" aria-label="Selected aircraft actions">
+      <button id="newStripBtn" class="dockBtn primary">Add Aircraft</button>
+      <div class="selectedCard" id="selectionReadout">No aircraft selected</div>
+      <div class="quickActions">
+        <button class="dockBtn" data-quick-action="fuel" disabled>Fuel</button>
+        <button class="dockBtn" data-quick-action="taxi" disabled>Taxi</button>
+        <button class="dockBtn" data-quick-action="ready" disabled>Ready</button>
+        <button class="dockBtn" data-quick-action="pattern" disabled>Pattern</button>
+        <button class="dockBtn" data-quick-action="away" disabled>Move To Away</button>
+        <button id="selectedEditBtn" class="dockBtn" disabled>Edit</button>
+        <button id="selectedDeleteBtn" class="dockBtn danger" disabled>Close</button>
+        <button id="selectedClearBtn" class="dockBtn ghost" disabled>Clear</button>
+      </div>
+
       <div class="menuWrap">
-        <button id="menuBtn" class="btn iconText" aria-haspopup="true" aria-expanded="false" title="Tools and settings">
-          <span aria-hidden="true">☰</span>
-          <span>Menu</span>
-        </button>
+        <button id="menuBtn" class="dockBtn ghost" aria-haspopup="true" aria-expanded="false">Menu</button>
         <div id="menuPanel" class="menuPanel hidden" role="menu" aria-label="Tools menu">
           <button id="exportBtn" class="menuItem" role="menuitem">Export backup</button>
           <label class="menuItem fileItem" role="menuitem">Import backup<input type="file" id="importFile" accept="application/json" /></label>
           <div class="menuDivider"></div>
           <button id="changelogBtn" class="menuItem" role="menuitem">Changelog</button>
-          <button id="clearAllBtn" class="menuItem danger" role="menuitem">Clear all strips</button>
+          <button id="clearAllBtn" class="menuItem danger" role="menuitem">Clear all aircraft</button>
         </div>
-      </div>
-
-      <button id="newStripBtn" class="btn primary addBtn" title="Shortcut: N">+ Add strip</button>
-
-      <div class="controlGroup" aria-label="Selected strip controls">
-        <div class="selectionReadout" id="selectionReadout">No strip selected</div>
-        <button id="selectedEditBtn" class="btn stripControl" disabled>Edit</button>
-        <button id="selectedDeleteBtn" class="btn stripControl danger" disabled>Delete</button>
-        <button id="selectedClearBtn" class="btn stripControl" disabled>Clear</button>
       </div>
     </section>
   </div>
@@ -144,7 +150,7 @@
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
       <div class="modal-header">
         <div>
-          <div class="modal-kicker">Flight strip</div>
+          <div class="modal-kicker">Aircraft details</div>
           <div class="modal-title" id="modalTitle">Add aircraft</div>
         </div>
         <button class="iconbtn" id="closeModalBtn" aria-label="Close">×</button>
@@ -153,32 +159,30 @@
       <form id="stripForm" class="form editPanelForm">
         <input type="hidden" id="stripId" />
         <select id="status" class="hiddenStatusSelect" aria-hidden="true" tabindex="-1">
-          <option value="groundActive" selected>Ground active</option>
-          <option value="departure">Departure</option>
-          <option value="arrival">Arrival</option>
+          <option value="groundActive" selected>Ground</option>
+          <option value="training">Taxi / ready</option>
           <option value="pattern">Pattern</option>
-          <option value="training">Training area</option>
-          <option value="crossCountry">Cross country</option>
-          <option value="encn">ENCN</option>
+          <option value="arrival">Inbound soon</option>
+          <option value="departure">Leaving local</option>
+          <option value="encn">Away / controlled airspace</option>
         </select>
 
-        <section class="editSection statusSection">
-          <div class="sectionTitle">Where is the aircraft now?</div>
+        <section class="editSection">
+          <div class="sectionTitle">Local state</div>
           <div class="statusButtons" role="group" aria-label="Status">
-            <button type="button" class="statusBtn" data-status-btn="groundActive"><span>GND</span><small>Ramp / taxi</small></button>
-            <button type="button" class="statusBtn" data-status-btn="departure"><span>DEP</span><small>Outbound</small></button>
-            <button type="button" class="statusBtn" data-status-btn="arrival"><span>ARR</span><small>Inbound</small></button>
-            <button type="button" class="statusBtn" data-status-btn="pattern"><span>Pattern</span><small>Circuit</small></button>
-            <button type="button" class="statusBtn" data-status-btn="training"><span>Training</span><small>Local area</small></button>
-            <button type="button" class="statusBtn" data-status-btn="crossCountry"><span>X-C</span><small>Navigation</small></button>
-            <button type="button" class="statusBtn" data-status-btn="encn"><span>ENCN</span><small>Enroute</small></button>
+            <button type="button" class="statusBtn" data-status-btn="groundActive"><span>Ground</span><small>Ramp / fuel / hold</small></button>
+            <button type="button" class="statusBtn" data-status-btn="training"><span>Taxi / Ready</span><small>Preparing locally</small></button>
+            <button type="button" class="statusBtn" data-status-btn="pattern"><span>Pattern</span><small>Circuit traffic</small></button>
+            <button type="button" class="statusBtn" data-status-btn="arrival"><span>Inbound</span><small>Near Gullknapp</small></button>
+            <button type="button" class="statusBtn" data-status-btn="departure"><span>Leaving</span><small>Before handoff</small></button>
+            <button type="button" class="statusBtn" data-status-btn="encn"><span>Away</span><small>Controlled airspace</small></button>
           </div>
         </section>
 
-        <section class="editSection editPrimary">
+        <section class="editSection">
           <div class="sectionTitle">Identity</div>
           <div class="editGrid identGrid">
-            <label class="fieldBig">Callsign<input id="callsign" placeholder="OJA123" autocomplete="off" required /></label>
+            <label class="fieldBig">Callsign<input id="callsign" placeholder="SCQ23A / LN-ABC" autocomplete="off" required /></label>
             <label>Based aircraft<input id="aircraftPick" list="aircraftList" placeholder="LN-AZA" autocomplete="off" /><datalist id="aircraftList"></datalist></label>
             <label>Aircraft source<select id="visiting"><option value="no" selected>Based aircraft</option><option value="yes">Visitor / manual</option></select></label>
             <label>Type<input id="aircraft" placeholder="C172" autocomplete="off" /></label>
@@ -187,7 +191,7 @@
         </section>
 
         <section class="editSection">
-          <div class="sectionTitle">Operational flags</div>
+          <div class="sectionTitle">Flags</div>
           <div class="editGrid opsGrid">
             <label id="fuelingWrap">Fueling<select id="fueling"><option value="no" selected>No</option><option value="yes">Yes</option></select></label>
             <label>Training<select id="training"><option value="none">None</option><option value="solo">Student solo</option><option value="instructor">With instructor</option></select></label>
@@ -196,15 +200,15 @@
         </section>
 
         <section class="editSection notesSection">
-          <div class="sectionTitle">Scratchpad</div>
-          <label class="notesField"><textarea id="notes" placeholder="RWY 05, TGL x3, fuel, local area..." autocomplete="off"></textarea></label>
+          <div class="sectionTitle">Ops note</div>
+          <label class="notesField"><textarea id="notes" placeholder="Fuel, TGL x3, ready RWY 05, inbound via reporting point..." autocomplete="off"></textarea></label>
         </section>
 
         <div class="form-actions editActions">
-          <button type="button" class="btn danger" id="deleteBtn" hidden>Delete</button>
+          <button type="button" class="dockBtn danger" id="deleteBtn" hidden>Close flight</button>
           <div class="spacer"></div>
-          <button type="button" class="btn" id="cancelBtn">Cancel</button>
-          <button type="submit" class="btn primary" id="saveBtn">Save strip</button>
+          <button type="button" class="dockBtn ghost" id="cancelBtn">Cancel</button>
+          <button type="submit" class="dockBtn primary" id="saveBtn">Save aircraft</button>
         </div>
       </form>
     </div>
@@ -220,18 +224,14 @@
         <button class="iconbtn" id="closeChangelogBtn" aria-label="Close">×</button>
       </div>
       <div class="changelogBody">
+        <div><b>0.10.0</b> - Local traffic attention surface and theme switcher.</div>
         <div><b>0.9.0</b> - Tablet-first visual and input rework.</div>
-        <div><b>0.8.2</b> - OSM watermark and iPad persistence fixes.</div>
-        <div><b>0.8.1</b> - Larger iPad-friendly edit panel with quick status buttons.</div>
-        <div><b>0.8.0</b> - Fixed ops layout with soft Pattern limit alert.</div>
-        <div><b>0.7.x</b> - Selected-strip controls and ATC-style strip layout.</div>
-        <div><b>0.6.x</b> - Six-column ops grid and timer logic.</div>
-        <div><b>0.5</b> - Stable test build with menu, aircraft DB, AIR timer and backup tools.</div>
+        <div><b>0.8.x</b> - iPad persistence, quick status buttons, backup tools.</div>
+        <div><b>0.7.x</b> - Selected-strip controls and ATC-style board layout.</div>
       </div>
     </div>
   </div>
 
-  <div class="wip-banner">TEST BUILD - USE AT YOUR OWN RISK</div>
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
   <script src="script.js"></script>
 </body>

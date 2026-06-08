@@ -1,16 +1,19 @@
-// v0.9.0 - tablet-first Gullknapp OPS board
+// v0.10.0 - Gullknapp local traffic attention surface
 
 (function () {
   const STORAGE_KEY = "gullknapp_strips_v06";
-  const STORAGE_META_KEY = "gullknapp_strips_meta_v090";
+  const STORAGE_META_KEY = "gullknapp_strips_meta_v010";
+  const THEME_KEY = "gullknapp_ops_theme_v010";
   const DB_URL = "./aircraft_db.json";
 
-  const COLUMNS = ["groundActive", "departure", "arrival", "pattern", "training", "crossCountry", "encn"];
+  const COLUMNS = ["groundActive", "training", "pattern", "arrival", "departure", "encn"];
+  const LOCAL_COLUMNS = ["groundActive", "training", "pattern", "arrival", "departure"];
   const VALID_STATUSES = new Set(COLUMNS);
 
   let state = { strips: [], db: [] };
   let selectedStripId = null;
 
+  const appShell = document.querySelector(".appShell");
   const modalBackdrop = document.getElementById("modalBackdrop");
   const stripForm = document.getElementById("stripForm");
   const modalTitle = document.getElementById("modalTitle");
@@ -31,9 +34,14 @@
   const changelogBackdrop = document.getElementById("changelogBackdrop");
   const closeChangelogBtn = document.getElementById("closeChangelogBtn");
   const summary = document.getElementById("summary");
+  const localCount = document.getElementById("localCount");
   const clockLocal = document.getElementById("clockLocal");
   const clockUtc = document.getElementById("clockUtc");
   const board = document.getElementById("board");
+  const themeSelect = document.getElementById("themeSelect");
+  const awayToggle = document.getElementById("awayToggle");
+  const awayList = document.getElementById("awayList");
+  const quickActionBtns = Array.from(document.querySelectorAll("[data-quick-action]"));
 
   const f = {
     id: document.getElementById("stripId"),
@@ -65,16 +73,16 @@
       .replaceAll("'", "&#039;");
   }
 
-  function normalizeInstructorCode(v) {
-    return String(v || "").trim().toUpperCase().slice(0, 3);
+  function normalizeText(v) {
+    return String(v || "").trim().toUpperCase();
   }
 
   function normalizeReg(v) {
-    return String(v || "").trim().toUpperCase();
+    return normalizeText(v);
   }
 
-  function normalizeText(v) {
-    return String(v || "").trim().toUpperCase();
+  function normalizeInstructorCode(v) {
+    return normalizeText(v).slice(0, 3);
   }
 
   function normalizeStatus(status) {
@@ -82,35 +90,8 @@
     if (VALID_STATUSES.has(s)) return s;
     if (s === "ground" || s === "fueling") return "groundActive";
     if (s === "airborne") return "departure";
-    if (s === "enroute" || s === "standby" || s === "ENCN") return "encn";
+    if (s === "crossCountry" || s === "enroute" || s === "standby" || s === "ENCN") return "encn";
     return "groundActive";
-  }
-
-  function statusShort(status, fueling) {
-    if (fueling) return "FUEL";
-    const map = {
-      groundActive: "GND",
-      departure: "DEP",
-      arrival: "ARR",
-      pattern: "TGL",
-      training: "TRN",
-      crossCountry: "X-C",
-      encn: "ENCN"
-    };
-    return map[normalizeStatus(status)] || "GND";
-  }
-
-  function statusLabel(status) {
-    const map = {
-      groundActive: "Ground",
-      departure: "Departure",
-      arrival: "Arrival",
-      pattern: "Pattern",
-      training: "Training",
-      crossCountry: "X-Country",
-      encn: "ENCN"
-    };
-    return map[normalizeStatus(status)] || "Ground";
   }
 
   function formatHHMM(ms) {
@@ -119,6 +100,39 @@
     const hh = String(Math.floor(totalMin / 60)).padStart(2, "0");
     const mm = String(totalMin % 60).padStart(2, "0");
     return `${hh}:${mm}`;
+  }
+
+  function getAirMs(strip) {
+    if (strip.status !== "groundActive" && typeof strip.airborneStartMs === "number") {
+      return Date.now() - strip.airborneStartMs;
+    }
+    if (typeof strip.lastAirTimeMs === "number") return strip.lastAirTimeMs;
+    return null;
+  }
+
+  function statusShort(strip) {
+    if (strip.fueling) return "FUEL";
+    if (strip.status === "training") return /taxi/i.test(strip.notes || "") ? "TAXI" : "READY";
+    const map = {
+      groundActive: "GND",
+      pattern: "TGL",
+      arrival: "IN",
+      departure: "OUT",
+      encn: "AWAY"
+    };
+    return map[normalizeStatus(strip.status)] || "GND";
+  }
+
+  function statusLabel(status) {
+    const map = {
+      groundActive: "Ground",
+      training: "Taxi / Ready",
+      pattern: "Pattern",
+      arrival: "Inbound Soon",
+      departure: "Leaving Local",
+      encn: "Away"
+    };
+    return map[normalizeStatus(status)] || "Ground";
   }
 
   function applyAirTimerTransition(strip, prevStatus, nextStatus) {
@@ -131,6 +145,7 @@
       strip.lastAirTimeMs = null;
       return;
     }
+
     if (prevInAir && !nextInAir) {
       if (strip.airborneStartMs) strip.lastAirTimeMs = now - strip.airborneStartMs;
       strip.airborneStartMs = null;
@@ -169,12 +184,19 @@
         selectedStripId
       }));
     } catch (err) {
-      console.warn("Strip save failed", err);
+      console.warn("Traffic save failed", err);
     }
   }
 
   function flushStateToStorage() {
     saveStrips();
+  }
+
+  function applyTheme(theme) {
+    const nextTheme = ["ops", "paper", "tower", "night"].includes(theme) ? theme : "ops";
+    appShell.dataset.theme = nextTheme;
+    themeSelect.value = nextTheme;
+    localStorage.setItem(THEME_KEY, nextTheme);
   }
 
   async function loadAircraftDB() {
@@ -275,7 +297,6 @@
 
     modalTitle.textContent = "Edit aircraft";
     deleteBtn.hidden = false;
-
     f.id.value = strip.id;
     f.callsign.value = strip.callsign || "";
 
@@ -332,10 +353,11 @@
   function setSelectedStrip(id) {
     selectedStripId = id ? String(id) : null;
     updateSelectedControls();
-    document.querySelectorAll(".strip").forEach(el => {
-      el.classList.toggle("selected", !!selectedStripId && el.dataset.id === selectedStripId);
+    document.querySelectorAll(".trafficTile").forEach(el => {
+      el.classList.toggle("selected", Boolean(selectedStripId) && el.dataset.id === selectedStripId);
     });
     updateSmartLayout();
+    saveStrips();
   }
 
   function updateSelectedControls() {
@@ -344,46 +366,93 @@
     selectedEditBtn.disabled = !hasSelection;
     selectedDeleteBtn.disabled = !hasSelection;
     selectedClearBtn.disabled = !hasSelection;
+    quickActionBtns.forEach(btn => { btn.disabled = !hasSelection; });
     selectionReadout.classList.toggle("active", hasSelection);
     selectionReadout.textContent = hasSelection
-      ? `${s.callsign || "-"} | ${s.registration || "-"} | ${statusLabel(s.status)}`
-      : "No strip selected";
+      ? `Selected ${s.callsign || "-"} | ${s.registration || "-"} | ${s.aircraft || "-"}`
+      : "No aircraft selected";
   }
 
   function updateSmartLayout() {
     const selected = getSelectedStrip();
     const selectedColumn = selected ? normalizeStatus(selected.status) : null;
-    document.querySelectorAll(".column").forEach(colEl => {
-      colEl.classList.toggle("primary", selectedColumn === colEl.dataset.column);
+    document.querySelectorAll(".zone").forEach(zone => {
+      zone.classList.toggle("primary", selectedColumn === zone.dataset.column);
     });
   }
 
   function setPatternAlert() {
     const patternCount = state.strips.filter(s => s.status === "pattern").length;
-    const patternCol = document.querySelector('[data-column="pattern"]');
-    if (patternCol) patternCol.classList.toggle("alert", patternCount > 2);
+    const patternZone = document.querySelector('[data-column="pattern"]');
+    if (patternZone) patternZone.classList.toggle("alert", patternCount > 2);
+  }
+
+  function computeCounts() {
+    return Object.fromEntries(COLUMNS.map(col => [col, state.strips.filter(s => s.status === col).length]));
   }
 
   function computeSummary() {
-    const counts = Object.fromEntries(COLUMNS.map(col => [col, state.strips.filter(s => s.status === col).length]));
+    const counts = computeCounts();
+    const local = LOCAL_COLUMNS.reduce((sum, col) => sum + (counts[col] || 0), 0);
     document.querySelectorAll("[data-count]").forEach(el => {
       el.textContent = String(counts[el.dataset.count] || 0);
     });
-
-    const total = state.strips.length;
-    summary.textContent = `GND ${counts.groundActive || 0} | DEP ${counts.departure || 0} | ARR ${counts.arrival || 0} | TGL ${counts.pattern || 0} | TRN ${counts.training || 0} | X-C ${counts.crossCountry || 0} | ENCN ${counts.encn || 0} | TOTAL ${total}`;
+    localCount.textContent = String(local);
+    summary.textContent = `LCL ${local}  GND ${counts.groundActive || 0}  TX ${counts.training || 0}  TGL ${counts.pattern || 0}  IN ${counts.arrival || 0}  OUT ${counts.departure || 0}  AWAY ${counts.encn || 0}`;
   }
 
-  function getAirTimeHtml(strip) {
-    let airMs = null;
-    if (strip.status !== "groundActive" && typeof strip.airborneStartMs === "number") {
-      airMs = Date.now() - strip.airborneStartMs;
-    } else if (typeof strip.lastAirTimeMs === "number") {
-      airMs = strip.lastAirTimeMs;
-    }
-    return airMs != null
-      ? `<div class="airtime"><span>AIR</span><b>${formatHHMM(airMs)}</b></div>`
-      : "";
+  function buildTags(strip) {
+    const tags = [];
+    const airMs = getAirMs(strip);
+    if (strip.fueling) tags.push('<span class="tag fuel">FUEL</span>');
+    if (strip.training === "solo") tags.push('<span class="tag solo">SOLO</span>');
+    if (strip.training === "instructor") tags.push(`<span class="tag cfi">CFI ${escapeHtml(strip.instructor || "---")}</span>`);
+    if (airMs != null && strip.status !== "groundActive") tags.push(`<span class="tag air">AIR ${formatHHMM(airMs)}</span>`);
+    return tags.join("");
+  }
+
+  function makeTrafficTile(strip) {
+    const el = document.createElement("div");
+    el.className = "trafficTile" + (strip.training === "solo" ? " solo" : "") + (strip.id === selectedStripId ? " selected" : "");
+    el.dataset.id = strip.id;
+    el.dataset.status = strip.status;
+    el.dataset.fueling = strip.fueling ? "yes" : "no";
+
+    const note = escapeHtml(strip.notes || "");
+    el.innerHTML = `
+      <div class="statusStripe"></div>
+      <div class="tileBody">
+        <div class="tileMain">
+          <div class="tileLabel">Callsign</div>
+          <div class="tileCallsign">${escapeHtml(strip.callsign || "-")}</div>
+        </div>
+        <div class="tileMeta">
+          <div class="tileLabel">Type</div>
+          <div class="tileValue">${escapeHtml(strip.aircraft || "-")}</div>
+        </div>
+        <div class="tileStatus">
+          <div class="tileLabel">State</div>
+          <div class="tileValue">${escapeHtml(statusShort(strip))}</div>
+        </div>
+        <div class="tileTags">
+          ${buildTags(strip)}
+          <div class="tileNote">${note}</div>
+        </div>
+      </div>
+    `;
+
+    el.addEventListener("click", ev => {
+      ev.stopPropagation();
+      setSelectedStrip(strip.id);
+    });
+
+    el.addEventListener("dblclick", ev => {
+      ev.stopPropagation();
+      const s = state.strips.find(x => x.id === strip.id);
+      if (s) openModal("edit", s);
+    });
+
+    return el;
   }
 
   function render() {
@@ -395,68 +464,8 @@
         strip.airborneStartMs = Date.now();
       }
 
-      const el = document.createElement("div");
-      el.className = "strip" + (strip.training === "solo" ? " solo" : "") + (strip.id === selectedStripId ? " selected" : "");
-      el.dataset.id = strip.id;
-      el.dataset.status = strip.status;
-      el.dataset.fueling = strip.fueling ? "yes" : "no";
-
-      const callsign = escapeHtml(strip.callsign || "-");
-      const type = escapeHtml(strip.aircraft || "-");
-      const reg = escapeHtml(strip.registration || "-");
-      const status = escapeHtml(statusShort(strip.status, strip.fueling));
-      const instr = strip.training === "instructor" ? `CFI ${escapeHtml(strip.instructor || "---")}` : (strip.training === "solo" ? "SOLO" : "");
-      const remarks = escapeHtml(strip.notes || instr || "");
-      const badges = [];
-
-      if (strip.training === "solo") badges.push('<span class="badge solo">SOLO</span>');
-      if (strip.training === "instructor") badges.push(`<span class="badge cfi">CFI ${escapeHtml(strip.instructor || "---")}</span>`);
-      if (strip.fueling) badges.push('<span class="badge fuel">FUEL</span>');
-
-      el.innerHTML = `
-        <div class="statusBand"></div>
-        <div class="strip-grid">
-          <div class="fcell callsign">
-            <div class="lab">Callsign</div>
-            <div class="val">${callsign}</div>
-            <div class="badges">${badges.join("")}</div>
-          </div>
-          <div class="fcell typeCell">
-            <div class="lab">Type</div>
-            <div class="val">${type}</div>
-            <div class="sub">${instr}</div>
-          </div>
-          <div class="fcell regCell">
-            <div class="lab">Registration</div>
-            <div class="val">${reg}</div>
-            <div class="sub">${getAirTimeHtml(strip)}</div>
-          </div>
-          <div class="fcell infoCell">
-            <div class="lab">Info</div>
-            <div class="val">${strip.fueling ? "FUEL" : (strip.training === "solo" ? "SOLO" : "")}</div>
-            <div class="sub">${escapeHtml(strip.wake || "")}</div>
-          </div>
-          <div class="fcell statusCell">
-            <div class="lab">Status</div>
-            <div class="val">${status}</div>
-          </div>
-          <div class="notesLine">${remarks}</div>
-        </div>
-      `;
-
-      el.addEventListener("click", ev => {
-        ev.stopPropagation();
-        setSelectedStrip(strip.id);
-      });
-
-      el.addEventListener("dblclick", ev => {
-        ev.stopPropagation();
-        const s = state.strips.find(x => x.id === strip.id);
-        if (s) openModal("edit", s);
-      });
-
       const container = document.querySelector(`[data-column="${strip.status}"] .strip-container`);
-      if (container) container.appendChild(el);
+      if (container) container.appendChild(makeTrafficTile(strip));
     }
 
     if (selectedStripId && !state.strips.some(s => s.id === selectedStripId)) selectedStripId = null;
@@ -472,7 +481,7 @@
     for (const col of COLUMNS) {
       const container = document.querySelector(`[data-column="${col}"] .strip-container`);
       if (!container) continue;
-      for (const el of container.querySelectorAll(".strip")) {
+      for (const el of container.querySelectorAll(".trafficTile")) {
         const strip = state.strips.find(s => s.id === el.dataset.id);
         if (strip) newOrder.push(strip);
       }
@@ -503,7 +512,7 @@
         dragClass: "sortable-drag",
         onEnd: evt => {
           const id = evt.item?.dataset?.id;
-          const newColumn = evt.to.closest(".column")?.dataset?.column;
+          const newColumn = evt.to.closest("[data-column]")?.dataset?.column;
           const strip = state.strips.find(s => s.id === id);
           if (!id || !newColumn || !strip) return;
 
@@ -542,7 +551,7 @@
 
   function deleteSelectedStrip() {
     const s = getSelectedStrip();
-    if (!s || !confirm(`Delete ${s.callsign}?`)) return;
+    if (!s || !confirm(`Close ${s.callsign}?`)) return;
     state.strips = state.strips.filter(x => x.id !== s.id);
     selectedStripId = null;
     saveStrips();
@@ -551,6 +560,30 @@
 
   function clearSelectedStrip() {
     setSelectedStrip(null);
+  }
+
+  function updateSelectedStatus(status, options = {}) {
+    const strip = getSelectedStrip();
+    if (!strip) return;
+    const prevStatus = strip.status;
+    strip.status = normalizeStatus(status);
+    strip.fueling = Boolean(options.fueling);
+    if (strip.status !== "groundActive") strip.fueling = false;
+    if (options.noteMode) {
+      const existing = String(strip.notes || "").trim();
+      if (!existing || /^(taxi|ready)$/i.test(existing)) strip.notes = options.noteMode;
+    }
+    applyAirTimerTransition(strip, prevStatus, strip.status);
+    saveStrips();
+    render();
+  }
+
+  function runQuickAction(action) {
+    if (action === "fuel") updateSelectedStatus("groundActive", { fueling: true });
+    if (action === "taxi") updateSelectedStatus("training", { noteMode: "Taxi" });
+    if (action === "ready") updateSelectedStatus("training", { noteMode: "Ready" });
+    if (action === "pattern") updateSelectedStatus("pattern");
+    if (action === "away") updateSelectedStatus("encn");
   }
 
   function installUppercaseInput(el) {
@@ -567,6 +600,15 @@
   selectedEditBtn.addEventListener("click", editSelectedStrip);
   selectedDeleteBtn.addEventListener("click", deleteSelectedStrip);
   selectedClearBtn.addEventListener("click", clearSelectedStrip);
+  quickActionBtns.forEach(btn => {
+    btn.addEventListener("click", () => runQuickAction(btn.dataset.quickAction));
+  });
+
+  themeSelect.addEventListener("change", () => applyTheme(themeSelect.value));
+  awayToggle.addEventListener("click", () => {
+    const isHidden = awayList.classList.toggle("hidden");
+    awayToggle.textContent = isHidden ? "Show" : "Hide";
+  });
 
   menuBtn.addEventListener("click", e => {
     e.stopPropagation();
@@ -622,7 +664,7 @@
 
   clearAllBtn.addEventListener("click", () => {
     closeMenu();
-    if (!confirm("Clear all strips from the board?")) return;
+    if (!confirm("Clear all aircraft from the board?")) return;
     state.strips = [];
     selectedStripId = null;
     saveStrips();
@@ -716,7 +758,7 @@
   deleteBtn.addEventListener("click", () => {
     const id = String(f.id.value || "");
     const s = state.strips.find(x => x.id === id);
-    if (!s || !confirm(`Delete ${s.callsign}?`)) return;
+    if (!s || !confirm(`Close ${s.callsign}?`)) return;
     state.strips = state.strips.filter(x => x.id !== id);
     selectedStripId = null;
     saveStrips();
@@ -733,6 +775,7 @@
   document.addEventListener("freeze", flushStateToStorage);
   setInterval(flushStateToStorage, 5000);
 
+  applyTheme(localStorage.getItem(THEME_KEY) || "ops");
   loadStrips();
   initSortable();
   render();
